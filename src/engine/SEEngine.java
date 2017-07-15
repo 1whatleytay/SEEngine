@@ -17,7 +17,7 @@ import static org.lwjgl.opengl.GL21.*;
 
 import java.util.HashMap;
 
-public class Engine {
+public class SEEngine {
     
     private static HashMap<String, Integer> versions() {
         HashMap<String, Integer> vers = new HashMap<>();
@@ -51,9 +51,10 @@ public class Engine {
     }
     
     private static void render() {
-        glUseProgram(Shaders.shaderProgram);
-        glBindBuffer(GL_ARRAY_BUFFER, Objects.mainBuffer);
-        glDrawArrays(GL_QUADS, 0, 4 * Objects.objectDrawSpace);
+        glUseProgram(SEIShaders.shaderProgram);
+        glBindBuffer(GL_ARRAY_BUFFER, SEObjects.mainBuffer);
+        SEObjects.fixOffsets();
+        glDrawArrays(GL_QUADS, 0, 4 * SEObjects.objectDrawSpace);
     }
     
     private static void loop() {
@@ -83,7 +84,7 @@ public class Engine {
             programData.keyFunc.key(key, action);
         });
         GL.createCapabilities();
-        if (!Shaders.loadProgram()) { log("Could not load shaders!"); return false; }
+        if (!SEIShaders.loadProgram()) { log("Could not load shaders!"); return false; }
         program = prog;
         programData = prog.program();
         String[] version = programData.compatibleVersions.replace(" ", "").split(",");
@@ -99,17 +100,17 @@ public class Engine {
                 if (versions.get(SEversion()) > v) { built = true; } else { built = false; break; }
             }
         }
-        if (!built) { Engine.log("Incompatible SE version."); return false; }
+        if (!built) { SEEngine.log("Incompatible SE version."); return false; }
         glfwSetWindowSize(window, programData.windowWidth, programData.windowHeight);
         glfwSetWindowTitle(window, programData.programName);
-        Objects.loadObjects(programData.maxObjects);
-        Textures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
+        SEObjects.loadObjects(programData.maxObjects);
+        SETextures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
         scWidth = programData.windowWidth; scHeight = programData.windowHeight;
         prog.setup();
         return true;
     }
     
-    public static String SEversion() { return "SEEarly4"; }
+    public static String SEversion() { return "SEAlpha0"; }
     
     public static void SEstart(SEProgram prog) {
         if (init(prog)) loop();

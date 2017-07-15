@@ -1,9 +1,9 @@
 package engine;
 
 import static org.lwjgl.opengl.GL11.*;
-import static engine.Logic.Data;
+import static engine.SERLogic.Data;
 
-public class Textures {
+public class SETextures {
     
     private static final int COMPONENTS = 3;
     private static Data texMap = null;
@@ -18,13 +18,13 @@ public class Textures {
         texMap = new Data(new float[texWidth * COMPONENTS * texHeight], texWidth, texHeight);
         texSpace = new boolean[texWidth * texHeight];
         mainTex = glGenTextures();
-        Images.loadTexture(texMap, mainTex);
+        SERImages.loadTexture(texMap, mainTex);
         BLANK_TEXTURE.texX = 0; BLANK_TEXTURE.texY = 0;
         BLANK_TEXTURE.texW = 0; BLANK_TEXTURE.texH = 0;
     }
     
     public static SETex SEloadTexture(String path) {
-        return SEloadTexture(Images.getAsGLTexture(path));
+        return SEloadTexture(SERImages.getAsGLTexture(path));
     }
     
     public static SETex SEsampleTexture(int x, int y, int w, int h) {
@@ -35,7 +35,7 @@ public class Textures {
     }
     
     public static SETex SEloadTexture(Data tex) {
-        if (tex.width > texMap.width || tex.height > texMap.height) { Engine.log("Texture Does Not Fit in Given Memory"); return null; }
+        if (tex.width > texMap.width || tex.height > texMap.height) { SEEngine.log("Texture Does Not Fit in Given Memory"); return null; }
         boolean found = false;
         int findX = 0, findY = 0;
         for (int scanX = 0; scanX < texMap.width - tex.width + 1; scanX++) {
@@ -51,7 +51,7 @@ public class Textures {
             }
             if (found) break;
         }
-        if (!found) { Engine.log("Out Of Texture Memory"); return null; }
+        if (!found) { SEEngine.log("Out Of Texture Memory"); return null; }
         for (int x = 0; x < tex.width; x++) {
             for (int y = 0; y < tex.height; y++) {
                 int texMapPoint = texMap(x + findX, y + findY, texMap.width);
@@ -88,7 +88,7 @@ public class Textures {
     }
     
     public static void SEdeleteTexture(SETex texture) {
-        if (texture == null) { Engine.log("Null Textures cannot be Deleted"); return; }
+        if (texture == null) { SEEngine.log("Null Textures cannot be Deleted"); return; }
         for (int x = 0; x < texture.texW * texMap.width; x++) {
             for (int y = 0; y < texture.texH * texMap.height; y++) {
                 texSpace[(int)(x + texture.texX * texMap.width) + (int)(y + texture.texY * texMap.height) * texMap.width] = false;

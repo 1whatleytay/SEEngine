@@ -1,14 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package app;
 
-/**
- *
- * @author desgroup
- */
+import engine.*;
+
 public class LoadData {
     
+    static SETex[] player_body;
+    static SETex[] player_arm;
+    
+    static String asset(String ass) { return MyApp.class.getResource("/assets/" + ass).getPath(); }
+    
+    static SETex[] loadBach(String name, String ext, int count) {
+        SETex[] textures = new SETex[count];
+        for (int a = 0; a < count; a++) textures[a] = SETextures.SEloadTexture(asset(name+a+"."+ext));
+        return textures;
+    }
+    
+    static void loadBasicData() {
+        player_body = loadBach("Sprites/char", "png", 2);
+        player_arm = loadBach("Sprites/arm", "gif", 2);
+    }
 }

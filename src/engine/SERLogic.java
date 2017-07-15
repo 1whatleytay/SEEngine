@@ -1,6 +1,6 @@
 package engine;
 
-public class Logic {
+public class SERLogic {
     public static class Data {
         public float[] data; public int width, height;
         public Data(float[] dat, int w, int h) { data = dat; width = w; height = h; }

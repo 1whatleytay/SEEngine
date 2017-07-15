@@ -1,19 +1,17 @@
 package app;
 
 import engine.*;
-import static engine.Engine.*;
+import static engine.SEEngine.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import java.util.*;
-import static engine.Textures.*;
-import static engine.Objects.*;
+import static engine.SETextures.*;
+import static engine.SEObjects.*;
 
 public class MyApp implements SEProgram {
     public static void main(String[] args) {
         SEstart(new MyApp());
     }
-    
-    String asset(String ass) { return MyApp.class.getResource("/assets/" + ass).getPath(); }
 
     @Override public SEProgramData program() {
         SEProgramData data = new SEProgramData();
@@ -24,14 +22,14 @@ public class MyApp implements SEProgram {
         data.texMemoryWidth = 1024;
         data.texMemoryHeight = 1024;
         data.compatibleVersions = "after:SEEarly3";
-        data.keyFunc = (int key, int action)->{key(key,action);};
+        data.keyFunc = keyFunc;
         return data;
     }
     
     @Override public void setup() {
         SEdirection(SE_TOP_TO_BOTTOM);
-        SEcreateObject(40, 40, 40, 40, Textures.SEloadTexture(asset("Maps/Map2.png")));
-        SEcreateObject(80, 80, 40, 40, Textures.SEloadTexture(asset("Sprites/char0.png")));
+        LoadData.loadBasicData();
+        
     }
     
     @Override public void update() {
@@ -39,6 +37,7 @@ public class MyApp implements SEProgram {
     
     boolean myThing = false;
     
-    public void key(int key, int action) {
-    }
+    SEProgramData.SEKeyFunc keyFunc = (int key, int action) -> {
+        
+    };
 }

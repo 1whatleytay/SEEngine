@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 
-import static engine.Logic.*;
+import static engine.SERLogic.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -14,7 +14,7 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL21.*;
 
-public class Images {
+public class SERImages {
     
     static int stexture_border = GL_REPEAT;
     static int stexture_filter = GL_NEAREST;
