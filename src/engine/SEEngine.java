@@ -110,7 +110,7 @@ public class SEEngine {
         return true;
     }
     
-    public static String SEversion() { return "SEAlpha0"; }
+    public static String SEversion() { return "SEAlpha0a"; }
     
     public static void SEstart(SEProgram prog) {
         if (init(prog)) loop();

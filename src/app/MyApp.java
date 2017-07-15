@@ -26,9 +26,15 @@ public class MyApp implements SEProgram {
         return data;
     }
     
+    SEObj pBase;
+    SEObj pArm;
+    
     @Override public void setup() {
         SEdirection(SE_TOP_TO_BOTTOM);
         LoadData.loadBasicData();
+        pBase = SEcreateObject(0, 0, 200, 200, LoadData.player_body[0]);
+        pArm = SEduplicateObject(pBase);
+        SEobjTex(pArm, LoadData.player_arm[0]);
         
     }
     

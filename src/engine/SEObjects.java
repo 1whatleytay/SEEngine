@@ -37,7 +37,7 @@ public class SEObjects {
     
     protected static void fixOffsets() { SEIShaders.offset(currentOffset[0], currentOffset[1]); }
     
-    public static float[] objNData(SEObj obj) {
+    public static float[] SEobjNData(SEObj obj) {
         float[] newObjData = {
             ((float)obj.x / SEEngine.scWidth * 2 - 1) * ampX, ((float)obj.y / SEEngine.scHeight * 2 - 1) * ampY, obj.tex.texX + (ampX==-1?obj.tex.texW:0), obj.tex.texY + (ampY==-1?0:obj.tex.texH),
             ((float)(obj.x + obj.w) / SEEngine.scWidth * 2 - 1) * ampX, ((float)obj.y / SEEngine.scHeight * 2 - 1) * ampY, obj.tex.texX + (ampX==-1?0:obj.tex.texW), obj.tex.texY + (ampY==-1?0:obj.tex.texH),
@@ -49,7 +49,7 @@ public class SEObjects {
     
     public static void SEobjSave(SEObj obj) {
         glBindBuffer(GL_ARRAY_BUFFER, mainBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, obj.object * OBJECTSIZE * OBJECTWIDTH * OBJECTWIDTH, objNData(obj));
+        glBufferSubData(GL_ARRAY_BUFFER, obj.object * OBJECTSIZE * OBJECTWIDTH * OBJECTWIDTH, SEobjNData(obj));
     }
     public static void SEobjPos(SEObj obj, int x, int y) { obj.x = x; obj.y = y; SEobjSave(obj); }
     public static void SEobjSize(SEObj obj, int w, int h) { obj.w = w; obj.h = h; SEobjSave(obj); }
@@ -72,6 +72,11 @@ public class SEObjects {
         SEEngine.log("F" + find + " " + objectDrawSpace);
         SEobjSave(obj);
         return obj;
+    }
+    
+    public static SEObj SEduplicateObject(SEObj obj) {
+        SEObj newObj = SEcreateObject(obj.x, obj.y, obj.w, obj.h, obj.tex);
+        return newObj;
     }
     
     public static void SEdeleteObject(SEObj obj) {
