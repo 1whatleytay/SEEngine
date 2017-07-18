@@ -1,11 +1,16 @@
 package engine;
 
 public class SEProgramData {
+    public static final byte FOURTH_COMPONENT_AS_DISCARD = 0x10;
+    public static final String ALL_VERSIONS = "all";
+    public static final String CURRENT_VERSION = SEEngine.SEversion();
+    
     public int windowWidth = 600, windowHeight = 600;
     public String programName = "Program";
     public int maxObjects = 20;
     public int texMemoryWidth = 256, texMemoryHeight = 256;
     public String compatibleVersions = "all";
+    public byte textureComponents = 3;
 
     public interface SEKeyFunc { void key(int key, int action); }
     public interface SEMouseFunc { void mouse(int x, int y, int button, int action); }

@@ -18,21 +18,22 @@ import static org.lwjgl.opengl.GL21.*;
 import java.util.HashMap;
 
 public class SEEngine {
+    private SEEngine() {}
+    
+    public static boolean
+            SEcollapseObjectDrawSpaceOnDeletion = false,
+            SEuseWrappedObjects = false,
+            SEcatchOpenGLErrors = false;
     
     private static HashMap<String, Integer> versions() {
         HashMap<String, Integer> vers = new HashMap<>();
         vers.put("SEEarly0", 0); vers.put("SEEarly1", 1); vers.put("SEEarly2", 2);
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
+        vers.put("SEAlpha1a", 6);
         return vers;
     }
     
-    private static HashMap<String, Integer> versions = versions();
-    
-    public static final int
-            SE_TOP_TO_BOTTOM = 0x100,
-            SE_BOTTOM_TO_TOP = 0x101,
-            SE_LEFT_TO_RIGHT = 0x102,
-            SE_RIGHT_TO_LEFT = 0x103;
+    private static final HashMap<String, Integer> VERSIONS = versions();
     
     public static String engineLog = "";
     public static void log(String log) { System.out.println(log); engineLog += log + "\n"; }
@@ -51,10 +52,20 @@ public class SEEngine {
     }
     
     private static void render() {
-        glUseProgram(SEIShaders.shaderProgram);
-        glBindBuffer(GL_ARRAY_BUFFER, SEObjects.mainBuffer);
-        SEObjects.fixOffsets();
-        glDrawArrays(GL_QUADS, 0, 4 * SEObjects.objectDrawSpace);
+        if (SEuseWrappedObjects) {
+            int a = 0;
+            for (SEWrappedObj wObj : SEObjects.knownObjects) {
+                SEIShaders.matrix(wObj.matrix);
+                int[] offset = SEObjects.offsets.get(wObj.offsetName);
+                SEIShaders.offset(offset[0], offset[1]);
+                glMultiDrawArrays(GL_QUADS, wObj.drawRangesStart, wObj.drawRangesCount);
+            }
+        } else {
+            glUseProgram(SEIShaders.shaderProgram);
+            glBindBuffer(GL_ARRAY_BUFFER, SEObjects.mainBuffer);
+            SEObjects.fixOffsets();
+            glDrawArrays(GL_QUADS, 0, 4 * SEObjects.objectDrawSpace);
+        }
     }
     
     private static void loop() {
@@ -63,6 +74,10 @@ public class SEEngine {
             glClear(GL_COLOR_BUFFER_BIT);
             program.update();
             render();
+            if (SEcatchOpenGLErrors) {
+                int error = glGetError();
+                if (error != GL_NO_ERROR) log("An OpenGL error has occured: " + error);
+            }
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
@@ -84,20 +99,25 @@ public class SEEngine {
             programData.keyFunc.key(key, action);
         });
         GL.createCapabilities();
-        if (!SEIShaders.loadProgram()) { log("Could not load shaders!"); return false; }
         program = prog;
         programData = prog.program();
+        SERImages.components = programData.textureComponents;
+        if (SERImages.components == 1) SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_GREYSCALE;
+        else if (SERImages.components == 4) {/*Do Nothing...*/} // Fix! GL_BLEND does not enable blending
+        else if (SERImages.components >= SEProgramData.FOURTH_COMPONENT_AS_DISCARD) {
+            SERImages.components = 4; SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_ROUND_ALPHA; }
+        if (!SEIShaders.loadProgram()) { log("Could not load shaders!"); return false; }
         String[] version = programData.compatibleVersions.replace(" ", "").split(",");
         boolean built = version[0].equals("all");
         for (String a : version) {
             if (a.equals(SEversion())) { built = true; break; }
             if (a.startsWith("before:")) {
-                Integer v = versions.get(a.substring(7)); if (v==null) v=Integer.MAX_VALUE;
-                if (versions.get(SEversion()) < v) { built = true; } else { built = false; break; }
+                Integer v = VERSIONS.get(a.substring(7)); if (v==null) v=Integer.MAX_VALUE;
+                if (VERSIONS.get(SEversion()) < v) { built = true; } else { built = false; break; }
             }
             if (a.startsWith("after:")) { 
-                Integer v = versions.get(a.substring(6)); if (v==null) v=Integer.MAX_VALUE;
-                if (versions.get(SEversion()) > v) { built = true; } else { built = false; break; }
+                Integer v = VERSIONS.get(a.substring(6)); if (v==null) v=Integer.MAX_VALUE;
+                if (VERSIONS.get(SEversion()) > v) { built = true; } else { built = false; break; }
             }
         }
         if (!built) { SEEngine.log("Incompatible SE version."); return false; }
@@ -110,7 +130,7 @@ public class SEEngine {
         return true;
     }
     
-    public static String SEversion() { return "SEAlpha0a"; }
+    public static String SEversion() { return "SEAlpha1a"; }
     
     public static void SEstart(SEProgram prog) {
         if (init(prog)) loop();

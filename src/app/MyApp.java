@@ -21,21 +21,28 @@ public class MyApp implements SEProgram {
         data.maxObjects = 60;
         data.texMemoryWidth = 1024;
         data.texMemoryHeight = 1024;
-        data.compatibleVersions = "after:SEEarly3";
+        data.textureComponents = SEProgramData.FOURTH_COMPONENT_AS_DISCARD;
+        data.compatibleVersions = "all";
         data.keyFunc = keyFunc;
         return data;
     }
     
     SEObj pBase;
     SEObj pArm;
+    SEWrappedObj player;
     
     @Override public void setup() {
+        SEuseWrappedObjects = true;
+        SEcollapseObjectDrawSpaceOnDeletion = true;
         SEdirection(SE_TOP_TO_BOTTOM);
         LoadData.loadBasicData();
         pBase = SEcreateObject(0, 0, 200, 200, LoadData.player_body[0]);
         pArm = SEduplicateObject(pBase);
-        SEobjTex(pArm, LoadData.player_arm[0]);
-        
+        SEobjTex(pBase, LoadData.player_arm[0]);
+        player = SEwrapObjects(new SEObj[]{pBase, pArm});
+        SEswapOffsets("player_offset");
+        SEmoveOffset(100, 100);
+        SEbindOffset(player);
     }
     
     @Override public void update() {

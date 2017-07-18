@@ -1,6 +1,13 @@
 package engine;
 
 public class SERLogic {
+    private SERLogic() {}
+    
+    public static class Range {
+        int start, count;
+        public Range(int s, int c) { start = s; count = c; }
+        public Range() {}
+    }
     public static class Data {
         public float[] data; public int width, height;
         public Data(float[] dat, int w, int h) { data = dat; width = w; height = h; }

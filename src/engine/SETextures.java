@@ -4,18 +4,18 @@ import static org.lwjgl.opengl.GL11.*;
 import static engine.SERLogic.Data;
 
 public class SETextures {
+    private SETextures() {}
     
-    private static final int COMPONENTS = 3;
     private static Data texMap = null;
     private static boolean[] texSpace = null;
     private static int mainTex = -1;
     
-    private static int texMap(int x, int y, int width) { return (x + y * width) * COMPONENTS; }
+    private static int texMap(int x, int y, int width) { return (x + y * width) * SERImages.components; }
     
     public static final SETex BLANK_TEXTURE = new SETex();
     
     protected static void loadTextures(int texWidth, int texHeight) {
-        texMap = new Data(new float[texWidth * COMPONENTS * texHeight], texWidth, texHeight);
+        texMap = new Data(new float[texWidth * SERImages.components * texHeight], texWidth, texHeight);
         texSpace = new boolean[texWidth * texHeight];
         mainTex = glGenTextures();
         SERImages.loadTexture(texMap, mainTex);
@@ -56,14 +56,14 @@ public class SETextures {
             for (int y = 0; y < tex.height; y++) {
                 int texMapPoint = texMap(x + findX, y + findY, texMap.width);
                 int texPoint = texMap(x, y, tex.width);
-                for (int a = 0; a < COMPONENTS; a++) {
+                for (int a = 0; a < SERImages.components; a++) {
                     texMap.data[texMapPoint + a] = tex.data[texPoint + a];
                 }
                 texSpace[(x + findX) + (y + findY) * texMap.width] = true;
             }
         }
         glBindTexture(GL_TEXTURE_2D, mainTex);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, findX, findY, tex.width, tex.height, GL_RGB, GL_FLOAT, tex.data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, findX, findY, tex.width, tex.height, SERImages.COMPONENT_REFERENCE[SERImages.components], GL_FLOAT, tex.data);
         SETex texture = new SETex();
         texture.texX = (float)findX / (float)texMap.width; texture.texY = (float)findY / (float)texMap.height;
         texture.texW = (float)tex.width / (float)texMap.width;  texture.texH = (float)tex.height / (float)texMap.height;
@@ -77,14 +77,14 @@ public class SETextures {
             for (int y = 0; y < tex.height; y++) {
                 int texMapPoint = texMap(x + findX, y + findY, texMap.width);
                 int texPoint = texMap(x, y, tex.width);
-                for (int a = 0; a < COMPONENTS; a++) {
+                for (int a = 0; a < SERImages.components; a++) {
                     texMap.data[texMapPoint + a] = tex.data[texPoint + a];
                 }
                 texSpace[(x + findX) + (y + findY) * texMap.width] = true;
             }
         }
         glBindTexture(GL_TEXTURE_2D, mainTex);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, findX, findY, tex.width, tex.height, GL_RGB, GL_FLOAT, tex.data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, findX, findY, tex.width, tex.height, SERImages.COMPONENT_REFERENCE[SERImages.components], GL_FLOAT, tex.data);
     }
     
     public static void SEdeleteTexture(SETex texture) {

@@ -6,11 +6,15 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL15.*;
+import org.lwjgl.opengl.GL20;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL21.*;
 
 public class SEIShaders {
+    private SEIShaders() {}
+    
     private static final String[] shaderSources = {
+            //Vertex Shader
               "#version 120\n"
             + "\n"
             + "attribute vec2 position;\n"
@@ -19,12 +23,13 @@ public class SEIShaders {
             + "varying vec2 texCoord_out;\n"
             + "\n"
             + "uniform vec2 offset;\n"
+            + "uniform mat2 matrix;\n"
             + "\n"
             + "void main() {\n"
             + " texCoord_out = texCoord;\n"
-            + " gl_Position = vec4(position + offset, 0.0, 1.0);\n"
+            + " gl_Position = vec4(position * matrix + offset, 0.0, 1.0);\n"
             + "}",
-        
+            //Frag Shader
               "#version 120\n"
             + "\n"
             + "uniform sampler2D tex;\n"
@@ -34,7 +39,37 @@ public class SEIShaders {
             + "void main() {\n"
             + " gl_FragColor = texture2D(tex, texCoord_out);\n"
             + "}",
+            //Frag Shader Round Alpha
+              "#version 120\n"
+            + "\n"
+            + "uniform sampler2D tex;\n"
+            + "\n"
+            + "varying vec2 texCoord_out;\n"
+            + "\n"
+            + "void main() {\n"
+            + " vec4 texColor = texture2D(tex, texCoord_out);\n"
+            + " if (texColor.a < 0.5) discard;\n"
+            + " gl_FragColor = texColor;\n"
+            + "}",
+            //Frag Shader Grey Scale
+            "#version 120\n"
+            + "\n"
+            + "uniform sampler2D tex;\n"
+            + "\n"
+            + "varying vec2 texCoord_out;\n"
+            + "\n"
+            + "void main() {\n"
+            + " vec4 texColor = texture2D(tex, texCoord_out);\n"
+            + " gl_FragColor = vec4(texColor.r, texColor.r, texColor.r, texColor.a);\n"
+            + "}",
     };
+    
+    protected static final byte
+            FRAG_MODE_NORMAL = 0x20,
+            FRAG_MODE_ROUND_ALPHA = 0x21,
+            FRAG_MODE_GREYSCALE = 0x22;
+    
+    protected static byte fragComponentMode = FRAG_MODE_NORMAL;
     
     protected static int shaderProgram = -1;
     
@@ -42,6 +77,7 @@ public class SEIShaders {
     private static int att_texCoord = -1;
     
     private static int uni_offset = -1;
+    private static int uni_matrix = -1;
     
     protected static boolean loadProgram() {
         //Load, Compile, Link...
@@ -49,7 +85,7 @@ public class SEIShaders {
         int vShader = glCreateShader(GL_VERTEX_SHADER);
         int fShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(vShader, shaderSources[0]);
-        glShaderSource(fShader, shaderSources[1]);
+        glShaderSource(fShader, shaderSources[fragComponentMode - 0x20 + 1]);
         glCompileShader(vShader);
         if (glGetShaderi(vShader, GL_COMPILE_STATUS) != GL_TRUE) {
             SEEngine.log("Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
@@ -77,12 +113,16 @@ public class SEIShaders {
         att_texCoord = glGetAttribLocation(shaderProgram, "texCoord");
         //Uniforms...
         uni_offset = glGetUniformLocation(shaderProgram, "offset");
+        uni_matrix = glGetUniformLocation(shaderProgram, "matrix");
         //Values...
         glUniform2f(uni_offset, 0f, 0f);
+        glUniformMatrix2fv(uni_matrix, false, SERLogic.genIdentityMatrix().data);
         return true;
     }
     
-    protected static void offset(float xOffset, float yOffset) { glUniform2f(uni_offset, xOffset, yOffset); }
+    protected static void matrix(SERLogic.Data data) { glUniformMatrix2fv(uni_matrix, false, data.data); }
+    
+    protected static void offset(int xOffset, int yOffset) { glUniform2f(uni_offset, (float)xOffset / (float)SEEngine.scWidth * SEObjects.ampX, (float)yOffset / (float)SEEngine.scHeight * SEObjects.ampY); }
     
     protected static void createPointer() {
         glUseProgram(shaderProgram);
@@ -92,6 +132,3 @@ public class SEIShaders {
         glEnableVertexAttribArray(att_texCoord);
     }
 }
-
-/*1gucha@hdsb.ca
-quvg*/
