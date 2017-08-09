@@ -15,17 +15,22 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL21.*;
 
+//Handles loading images among other things.
 public class SERImages {
     private SERImages() {}
     
-    static int stexture_border = GL_REPEAT;
-    static int stexture_filter = GL_NEAREST;
-    static void setupTexture() {
+    //Sets some texture parameters so the texture will function properly.
+    public static int stexture_border = GL_REPEAT;
+    public static int stexture_filter = GL_NEAREST;
+    public static void setupTexture() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, stexture_border);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, stexture_border);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, stexture_filter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, stexture_filter);
     }
+    
+    //Some component reference. To know how many components match up with which
+    //OpenGL constants.
     public static byte components = 4;
     public static final int[] COMPONENT_REFERENCE = {
         GL_NONE,
@@ -34,7 +39,10 @@ public class SERImages {
         GL_RGB,
         GL_RGBA,
     };
-    public static Data getAsGLTexture(String path) {
+    
+    //Loads a texture found in an image file located at path into a Data
+    //structure.
+    public static Data SEgetImageData(String path) {
         path = path.replace("%20", " ");
         BufferedImage img;
         float[] glTexture = null;
@@ -66,15 +74,16 @@ public class SERImages {
             } catch (Exception ex) {}
         } else { System.out.println("Texture " + path + " does not exist!"); return null; }
         if (glTexture == null) { System.err.println("Could not load texture! Path: " + path); return null; }
-        /*glTexture = new float[]{1, 0, 0, 1, 1, 0, 1, 0.5f};
-        width = 2; height = 1;*/
         return new Data(glTexture, width, height);
     }
+    
+    //Quickly loads the data data into texture texture.
     public static void loadTexture(Data data, int texture) {
         if (data == null) { System.out.println("Failed to load texture."); return; }
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, COMPONENT_REFERENCE[components], data.width, data.height, 0, COMPONENT_REFERENCE[components], GL_FLOAT, data.data);
         setupTexture();
     }
-    public static void loadTexture(String texturePath, int texture) { loadTexture(getAsGLTexture(texturePath), texture); }
+    //String or image file alternative to loadTexture(Data, int).
+    public static void loadTexture(String texturePath, int texture) { loadTexture(SEgetImageData(texturePath), texture); }
 }
