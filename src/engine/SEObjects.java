@@ -52,7 +52,7 @@ public class SEObjects {
     //newOffset is not created, it will create it for you.
     //Bug? Odd jump to center maybe when moving offsets...
     public static void SEswapOffsets(String newOffset) {
-        offsets.put(currentOffsetName, currentOffset); //Is this even needed? (I think we might)
+        offsets.put(currentOffsetName, currentOffset); //Is this even needed? (I think we might need it)
         currentOffset = offsets.get(newOffset);
         if (currentOffset == null) { currentOffset = new int[]{0, 0}; offsets.put(newOffset, currentOffset); }
         currentOffsetName = newOffset;
@@ -73,7 +73,25 @@ public class SEObjects {
     //even swap to different offsets, but objs will always only be offset by the
     //current offset at the time of this call. If an offset is already attached,
     //the new one will take it's place.
-    public static void SEbindOffset(SEWrappedObj objs) { objs.offsetName = currentOffsetName; }
+    public static void SEbindOffset(SEWrappedObj objs) { objs.offsetNames.add(currentOffsetName); }
+    
+    private static boolean hasWarnedPointlessUnbindOffset = false;
+    
+    public static void SEunbindOffset(SEWrappedObj objs) {
+        int findInstance = -1;
+        for (int a = 0; a < objs.offsetNames.size(); a++)
+            if (objs.offsetNames.get(a).equals(currentOffsetName)) { findInstance = a; break; }
+        if (findInstance == -1 && !hasWarnedPointlessUnbindOffset) {
+            SEEngine.log(MSG_OPT, "An attempt was made to unbind offset" + currentOffsetName + "on a wrapped object where the offset was not bound.");
+            hasWarnedPointlessUnbindOffset = true;
+            return;
+        }
+        objs.offsetNames.remove(findInstance);
+    }
+    
+    public static String lastStash = ORIGIN_OFFSET;
+    public static void SEstashOffset(String newOffset) { lastStash = currentOffsetName; SEswapOffsets(newOffset); }
+    public static void SEstashOffset() { SEswapOffsets(lastStash); }
     
     //Uses the current offset in any OpenGL draw calls to come.
     protected static void fixOffsets() { SEIShaders.offset(currentOffset[0], currentOffset[1]); }
@@ -95,8 +113,7 @@ public class SEObjects {
     public static void SEmatrixCenter(SEWrappedObj objs, SEObj obj) { objs.useObjectForMatrixCenter = true; objs.matrixCenter = obj; }
     
     //A function to create object data that OpenGL can read.
-    //Planned for private status.
-    public static float[] SEobjNData(SEObj obj) {
+    private static float[] SEobjNData(SEObj obj) {
         float[] newObjData = {
             ((float)obj.x / SEEngine.scWidth * 2 - 1) * ampX, ((float)obj.y / SEEngine.scHeight * 2 - 1) * ampY, (float)(obj.tex.texX + (ampX==-1?obj.tex.texW:0)), (float)(obj.tex.texY + (ampY==-1?0:obj.tex.texH)),
             ((float)(obj.x + obj.w) / SEEngine.scWidth * 2 - 1) * ampX, ((float)obj.y / SEEngine.scHeight * 2 - 1) * ampY, (float)(obj.tex.texX + (ampX==-1?0:obj.tex.texW)), (float)(obj.tex.texY + (ampY==-1?0:obj.tex.texH)),
@@ -181,7 +198,7 @@ public class SEObjects {
         }
         SEWrappedObj wObjs = new SEWrappedObj();
         wObjs.matrix = SERLogic.genIdentityMatrix();
-        wObjs.offsetName = ORIGIN_OFFSET;
+        if (!SEEngine.SEdoNotBindOriginOffset) wObjs.offsetNames.add(ORIGIN_OFFSET);
         wObjs.objs = objs;
         wObjs.genDrawRanges();
         if (SEEngine.SEexperimentalDepth) wObjs.pointerForDepth = knownObjects.size();
@@ -223,6 +240,16 @@ public class SEObjects {
         objectDrawSpace = Math.max(objectDrawSpace, find) + 1; // This math is incorrect, the +1 will always increment
         SEobjSave(obj);
         return obj;
+    }
+    
+    public static SEObj SEcreateObjectW(int x, int y, int w, int h, SETex tex) {
+        SEObj obj = SEcreateObject(x, y, w, h, tex);
+        SEwrapObjects(SEsingle(obj));
+        return obj;
+    }
+    
+    public static SEObj SEcreateObjectWrapped(int x, int y, int w, int h, SETex tex) {
+        return SEcreateObjectW(x, y, w, h, tex);
     }
     
     //Duplicates and returns the object obj into a seperately movable object.

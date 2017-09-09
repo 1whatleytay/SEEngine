@@ -75,15 +75,6 @@ public class SETextures {
     //String versions of SEloadTexture(Data)
     public static SETex SEloadTexture(String path) { return SEloadTexture(SERImages.SEgetImageData(path)); }
     
-    //Samples a texture from somewhere in memory. This might be unsafe.
-    //Planned for removal.
-    public static SETex SEsampleTexture(int x, int y, int w, int h) {
-        SETex tex = new SETex();
-        tex.texX = (float)x / (float)texMap.width; tex.texY = (float)y / (float)texMap.height;
-        tex.texW = (float)w / (float)texMap.width; tex.texH = (float)h / (float)texMap.height;
-        return tex;
-    }
-    
     //Samples a section of an existing texture. Texture bounderies are not
     //respected. This might be unsafe. Probably buggy!
     public static SETex SEsampleTexture(SETex mainTex, int offX, int offY, int width, int height) {
@@ -96,7 +87,7 @@ public class SETextures {
     }
     
     //Stores the texture data in tex in texture. This might be unsafe.
-    //Planned for removal.
+    //Probably not a good idea.
     public static void SEoverrideTexture(SETex texture, Data tex) {
         int findX = (int)(texture.texX * texMap.width), findY = (int)(texture.texY * texMap.height);
         for (int x = 0; x < tex.width; x++) {

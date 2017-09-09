@@ -12,9 +12,7 @@ public class SEWrappedObj {
     protected SEObj[] objs;
     //The draw ranges to use with glMultiDrawArrays(int, int[], int[]).
     protected int[] drawRangesStart, drawRangesCount;
-    //The name of the current offset active for the SEWrappedObj. Set with
-    //SEbindOffset(SEWrappedObj).
-    protected String offsetName;
+    protected ArrayList<String> offsetNames = new ArrayList<>();
     //A matrix that can rotate or scale the wrapped objects. Set with calls to
     //SEresetMatrix, SErotateMatrix, SEscaleMatrix and SEcustomMatrix.
     protected SERLogic.Data matrix;
@@ -29,7 +27,7 @@ public class SEWrappedObj {
     protected int matrixCenterX, matrixCenterY;
     //A value that may be used to speed up calls to SEdepth if
     //SEexperimentalDepth is enabled.
-    protected int pointerForDepth = -1;
+protected int pointerForDepth = -1;
     //Gets the object at obj.
     public SEObj getObject(int obj) { return objs[obj]; }
     //Gets the array of SEObj that are wrapped.

@@ -74,7 +74,8 @@ public class SEEngine {
             SEcalcFPS = false,
             //Is true right before the main program's setup function is called.
             //Usually true once a window is open too.
-            SEisRunning = false;
+            SEisRunning = false,
+            SEdoNotBindOriginOffset = false;
     
     //HashMap of known versions. It's okay if your version isn't listed here,
     //we'll do our best guess to determine where your version is in the timeline
@@ -142,8 +143,12 @@ public class SEEngine {
     //Draws a wrapped object when render time comes.
     private static void drawWrappedObject(SEWrappedObj wObj) {
         SEIShaders.matrix(wObj.matrix);
-        int[] offset = SEObjects.offsets.get(wObj.offsetName);
-        SEIShaders.offset(offset[0], offset[1]);
+        int[] totalOffset = new int[2];
+        for (String coffsetName : wObj.offsetNames) {
+            int[] coffset = SEObjects.offsets.get(coffsetName);
+            totalOffset[0] += coffset[0]; totalOffset[1] += coffset[1];
+        }
+        SEIShaders.offset(totalOffset[0], totalOffset[1]);
         int xCen = wObj.matrixCenterX; int yCen = wObj.matrixCenterY;
         if (wObj.useObjectForMatrixCenter) { xCen = wObj.matrixCenter.centerX; yCen = wObj.matrixCenter.centerY; }
         SEIShaders.matrix_center(xCen, yCen);

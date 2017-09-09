@@ -137,7 +137,7 @@ public class SEIShaders {
     //Some shader interaction functions...
     protected static void matrix(SERLogic.Data data) { glUniformMatrix2fv(uni_matrix, false, data.data); }
     protected static void matrix_center(int xMat, int yMat) { glUniform2f(uni_matrix_center, (xMat / SEEngine.scWidth - 0.5f) * 2 * SEObjects.ampX, (yMat / SEEngine.scHeight - 0.5f) * 2 * SEObjects.ampY); }
-    protected static void offset(int xOffset, int yOffset) { glUniform2f(uni_offset, (float)xOffset / (float)SEEngine.scWidth * SEObjects.ampX, (float)yOffset / (float)SEEngine.scHeight * SEObjects.ampY); }
+    protected static void offset(int xOffset, int yOffset) { glUniform2f(uni_offset, (float)xOffset / (float)SEEngine.scWidth * SEObjects.ampX * 2, (float)yOffset / (float)SEEngine.scHeight * SEObjects.ampY * 2); }
     
     //Add Vertex Attribute Pointers to the currently bound buffer...
     protected static void createPointer() {
