@@ -1,23 +1,37 @@
+/*
+ * SEEngine OpenGL 2.0 Engine
+ * Copyright (C) 2017  desgroup
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package engine;
 
-import java.io.File;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL15.*;
-import org.lwjgl.opengl.GL20;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL21.*;
 
+import static engine.SEConstants.*;
 import static engine.SEProgramData.*;
 
-//Handles SEEngine's shaders.
+/**
+ * Handles creating, loading and changing shaders.
+ * @author desgroup
+ * @version SEAlpha2a
+ */
 public class SEIShaders {
     private SEIShaders() {}
     
-    //A list of shader sources to use depending on your program's SEProgramData.
-    private static final String[] shaderSources = {
+    private static final String[] SHADER_SOURCES = {
             //Vertex Shader
               "#version 120\n"
             + "\n"
@@ -68,45 +82,45 @@ public class SEIShaders {
             + " gl_FragColor = vec4(texColor.r, texColor.r, texColor.r, texColor.a);\n"
             + "}",
     };
-    
-    //Number that represent different fragment shaders in the shader list.
-    protected static final byte
-            FRAG_MODE_NORMAL = 0x20,
-            FRAG_MODE_ROUND_ALPHA = 0x21,
-            FRAG_MODE_GREYSCALE = 0x22;
-    
-    //One of the numbers above that points to one of the fragment shaders.
+
+    /**
+     * The current fragment shader.
+     * Should be a FRAG_MODE_ constant.
+     */
     protected static byte fragComponentMode = FRAG_MODE_NORMAL;
-    
-    //The OpenGL shader program.
+
+    /**
+     * The OpenGL shader program.
+     */
     protected static int shaderProgram = -1;
     
-    //Shader attributes...
     private static int att_position = -1;
     private static int att_texCoord = -1;
     
-    //Shader uniforms...
     private static int uni_offset = -1;
     private static int uni_matrix_center = -1;
     private static int uni_matrix = -1;
-    
-    //Loads the correct shaders based on fragComponentMode.
+
+    /**
+     * Loads and initializes the requested shaders.
+     * @return True if the function was successful, false otherwise.
+     */
     protected static boolean loadProgram() {
         //Load, Compile, Link...
         shaderProgram = glCreateProgram();
         int vShader = glCreateShader(GL_VERTEX_SHADER);
         int fShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(vShader, shaderSources[0]);
-        glShaderSource(fShader, shaderSources[fragComponentMode - 0x20 + 1]);
+        glShaderSource(vShader, SHADER_SOURCES[0]);
+        glShaderSource(fShader, SHADER_SOURCES[fragComponentMode - 0x20 + 1]);
         glCompileShader(vShader);
         if (glGetShaderi(vShader, GL_COMPILE_STATUS) != GL_TRUE) {
-            SEEngine.log(MSG_FAIL_FATAL, "Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
+            SEEngine.logWithDescription(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_VERTEX_COMPILE_ERROR, "Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
         glCompileShader(fShader);
         if (glGetShaderi(fShader, GL_COMPILE_STATUS) != GL_TRUE) {
-            SEEngine.log(MSG_FAIL_FATAL, "Failed to compile fragment shader:\n" + glGetShaderInfoLog(fShader));
+            SEEngine.logWithDescription(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_VERTEX_COMPILE_ERROR, "Failed to compile fragment shader:\n" + glGetShaderInfoLog(fShader));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
@@ -114,7 +128,7 @@ public class SEIShaders {
         glAttachShader(shaderProgram, fShader);
         glLinkProgram(shaderProgram);
         if (glGetProgrami(shaderProgram, GL_LINK_STATUS) != GL_TRUE) {
-            SEEngine.log(MSG_FAIL_FATAL, "Failed to link shader program:\n" + glGetProgramInfoLog(shaderProgram));
+            SEEngine.logWithDescription(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_LINK_ERROR, "Failed to link shader program:\n" + glGetProgramInfoLog(shaderProgram));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
@@ -134,12 +148,29 @@ public class SEIShaders {
         return true;
     }
     
-    //Some shader interaction functions...
+    /**
+     * Sets the current matrix to data.
+     * @param data The new matrix (2x2 Data Structure) to be set as the current matrix.
+     */
     protected static void matrix(SERLogic.Data data) { glUniformMatrix2fv(uni_matrix, false, data.data); }
+
+    /**
+     * Changes the current matrix center to xMat, yMat.
+     * @param xMat The x position of the new matrix center (in pixels).
+     * @param yMat The y position of the new matrix center (in pixels).
+     */
     protected static void matrix_center(int xMat, int yMat) { glUniform2f(uni_matrix_center, (xMat / SEEngine.scWidth - 0.5f) * 2 * SEObjects.ampX, (yMat / SEEngine.scHeight - 0.5f) * 2 * SEObjects.ampY); }
+
+    /**
+     * Changes the current offset (for the shader) to xOffset, yOffset.
+     * @param xOffset The x offset to be used.
+     * @param yOffset The y offset to be used.
+     */
     protected static void offset(int xOffset, int yOffset) { glUniform2f(uni_offset, (float)xOffset / (float)SEEngine.scWidth * SEObjects.ampX * 2, (float)yOffset / (float)SEEngine.scHeight * SEObjects.ampY * 2); }
     
-    //Add Vertex Attribute Pointers to the currently bound buffer...
+    /**
+     * Adds Vertex Attribute Pointers to the currently bound buffer.
+     */
     protected static void createPointer() {
         glUseProgram(shaderProgram);
         glVertexAttribPointer(att_position, 2, GL_FLOAT, false, Float.SIZE/8*4, 0);

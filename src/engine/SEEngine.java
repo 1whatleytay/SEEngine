@@ -1,3 +1,20 @@
+/*
+ * SEEngine OpenGL 2.0 Engine
+ * Copyright (C) 2017  desgroup
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package engine;
 
 import org.lwjgl.opengl.GL;
@@ -8,89 +25,93 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL21.*;
 
 import java.util.HashMap;
 import java.util.ArrayList;
 
-import static engine.SEProgramData.*;
-import org.lwjgl.opengl.GL11;
+import static engine.SEConstants.*;
 
+/**
+ * Handles starting the engine and controlling flow and features of the program(s).
+ * @author desgroup
+ * @version SEAlpha2a
+ */
 public class SEEngine {
-    /*
-    Bugs:
-        Offset seems to offet the object by a little more than it's supposed to be (center of screen or something similar)
-    */
     
     private SEEngine() {}
+
+    /**
+     * Calls SEcollapseDrawSpace every time an object is deleted.
+     * Only has an effect with SEwrappedObjects disabled.
+     */
+    public static boolean SEcollapseObjectDrawSpaceOnDeletion = false;
+    /**
+     * Switches mode to use Wrapped Objects.
+     * Allows matrix and offset transformations for many wrapped objects.
+     */
+    public static boolean SEwrappedObjects = false;
+    /**
+     * Looks for OpenGL errors every frame and notifies your application with a MSG_OPENGL message.
+     */
+    public static boolean SEcatchOpenGLErrors = false;
+    /**
+     * Allows {@link engine.SEObj} to be wrapped twice.
+     */
+    public static boolean SEdoubleWrappedObjects = false;
+    /**
+     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link enigne.SEWrappedObj}.
+     */
+    public static boolean SEwrappedObjectDepth = false;
+    /**
+     * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEProgram)} as soon as the program returns.
+     * Using this option to quit the window (almost) insures a safe termination of GLFW and other libraries.
+     */
+    public static boolean SEshouldQuit = false;
+    /**
+     * Allows MSG_DEBUG messages sent by the engine to be sent to your application.
+     * Meant for debugging the engine.
+     * If unsure, leave  this feature off.
+     */
+    public static boolean SEcoreDebug = false;
+    /**
+     * Disables automatic window drawing.
+     * To continue drawing, re-enable this setting or call SEdraw() when you wish to update the screen.
+     */
+    public static boolean SEdrawOnCommand = false;
+    /**
+     * Allows FPS calculations.
+     * To get the current FPS measurement, call {@link engine.SEEngine#SEgetFPS()}
+     */
+    public static boolean SEcalcFPS = false;
+    /**
+     * When enabled, a program is currently running.
+     * Changing this setting may have an effect on other applications, and will definitely have an effect on calls to SEque.
+     * If unsure, leave untouched.
+     */
+    public static boolean SEisRunning = false;
+    /**
+     * Prevents binding {@link enigine.SEObjects#ORIGIN_OFFSET} to all {@link engine.SEWrappedObj} on creation.
+     */
+    public static boolean SEpreventBindOriginOffset = false;
+    /**
+     * Prevents overwriting descriptions.
+     * Breaks {@link engine.SEEngine#logWithDescription(byte, int, String)} and descriptions that may be variable.
+     */
+    public static boolean SEpreventDoubleDescriptions = false;
     
-    //Abilities and features that are currently not included by default.
-    //Some may actually be controlls, like SEshouldQuit.
-    //Try not to flicker these settings on and off. That may cause some issues
-    //with the engine or the application.
-    public static boolean
-            //To see any performance increase, only enable when
-            //SEuseWrappedObjects is disabled. Calls SEcollapseDrawSpace every
-            //time an object is deleted.
-            SEcollapseObjectDrawSpaceOnDeletion = false,
-            //Uses and draws with wrapped objects or the SEWrappedObj class.
-            //If an object is not wrapped, it will not be drawn. However,
-            //wrapped objects offer a bunch of new features that you cannot
-            //access with normal objects, while remaining somewhat efficient.
-            SEuseWrappedObjects = false,
-            //Looks for OpenGL errors every frame. If it finds one, it'll be
-            //sure to tell you with a MSG_OPENGL message.
-            SEcatchOpenGLErrors = false,
-            //Once enabled, objects will be able to be wrapped twice. Enable
-            //this for particle machines that use wrapped objects, that may
-            //need to wrap a single object over and over.
-            SEdoubleWrappedObjects = false,
-            //Enabled depth for wrapped objects. Changes how SEWrappedObjs are
-            //drawn a little to make space for the depth mechanic. To move the
-            //depth of a wrapped object, call SEdepth on the object.
-            SEwrappedObjectDepth = false,
-            //Enable this to quit the application as soon as possible. Might not
-            //work if the application is frozen, however, it's safe and quits
-            //everything properly.
-            SEshouldQuit = false,
-            //Enable this to receive MSG_DEBUG messages from the engine. May or
-            //may not send you anything, depending on your version.
-            SEcoreDebug = false,
-            //An alternative depth measurement. May speed up SEdepth calls
-            //ever so slightly.
-            SEexperimentalDepth = false,
-            //When enabled, the window no longer updates automatically. Call
-            //SEdraw to update the screen yourself. Mostly for applications with
-            //little infrequent changes, like tools.
-            SEdrawOnCommand = false,
-            //When enabled, FPS will start being calculated. If diabled,
-            //SEgetFPS will be reading off false infomation and may not return
-            //the right value.
-            SEcalcFPS = false,
-            //Is true right before the main program's setup function is called.
-            //Usually true once a window is open too.
-            SEisRunning = false,
-            SEdoNotBindOriginOffset = false;
-    
-    //HashMap of known versions. It's okay if your version isn't listed here,
-    //we'll do our best guess to determine where your version is in the timeline
-    //of SEversions.
     private static HashMap<String, Integer> versions() {
         HashMap<String, Integer> vers = new HashMap<>();
         vers.put("SEEarly0", 0); vers.put("SEEarly1", 1); vers.put("SEEarly2", 2);
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
         vers.put("SEAlpha1a", 6); vers.put("SEAlpha1b", 7); vers.put("SEAlpha1c", 8);
+        vers.put("SEAlpha2a", 9);
         return vers;
     }
     private static final HashMap<String, Integer> VERSIONS = versions();
     
-    //Determines if the string passed through cversions is compatible with the
-    //current version.
     private static boolean isCompatible(String cversions) {
         String[] version = cversions.replace(" ", "").split(",");
         boolean built = version[0].equals("all");
@@ -108,39 +129,124 @@ public class SEEngine {
         return built;
     }
     
-    //Some messaging functions.
-    //msgFuncExists is true if the program actually set a messaging function.
-    //engineLog is a String of all past logged events with log(byte, String).
-    //log(byte, String) logs the message and sends the message to your program
-    //if you program has a messaging function.
     private static boolean msgFuncExists = false;
+
+    /**
+     * A string of all messages sent to your application separated by newlines.
+     */
     public static String engineLog = "";
-    public static void log(byte type, String log) { if (msgFuncExists) programData.messageFunc.msg(type, log); engineLog += log + "\n"; }
+
+    /**
+     * Sends a message to the current application with a type and a description.
+     * @param type The type of the message being sent. Should be a MSG_ constant from {@link engine.SEProgramData}.
+     * @param message A indicator of the specific message.
+     */
+    public static void log(byte type, int message) {
+        if (msgFuncExists) programData.messageFunc.msg(type, message);
+        engineLog += SEgetMessageDescription(message) + "\n"; 
+    }
     
-    //Calls log(byte, String) with type of MSG_DEBUG and the provided String log
-    //if SEcoreDebug is enabled. Mostly for internal messaging, if use at all.
-    public static void debug(String log) { if (SEcoreDebug) log(MSG_DEBUG, log); }
+    private static HashMap<Integer, String> messageDescriptions() {
+        HashMap<Integer, String> nMD = new HashMap<>();
+        nMD.put(MSG_GENERIC, "A generic placeholder message. Expected more?");
+        nMD.put(MSG_INIT, "--> SEEngine is initializing...");
+        nMD.put(MSG_LOOP, "--> SEEngine has entered the main program loop...");
+        nMD.put(MSG_EXIT, "--> SEEngine is closing...");
+        nMD.put(MSG_GLFW_ERROR, "GLFW failed to start.");
+        nMD.put(MSG_WINDOW_ERROR, "Could not create window!");
+        nMD.put(MSG_SHADERS_ERROR, "Could not load shaders!");
+        nMD.put(MSG_INCOMPATIBLE_PROGRAM, "Program claims to be incompatible with " + SEversion());
+        nMD.put(MSG_OPENGL_FEEDBACK_ERROR, "Generic OpenGL Error, I think...");
+        nMD.put(MSG_LOG_WITH_DESCRIPTION_WARNING, "Calling logWithDescription with SEpreventDoubleDescriptions can cause some unreliable mesages being sent.");
+        nMD.put(MSG_GET_FPS_WARNING, "A call to SEgetFPS() was made, but SEcalcFPS was disabled, and the FPS may not be accurate.");
+        nMD.put(MSG_DRAW_WARNING, "SEdraw was called even though the frame was going to be drawn anyway. Maybe you're looking for enabling SEdrawOnCommand?");
+        nMD.put(MSG_DEBUG_BINDING_POINT, "Generic Debug Message, I think...");
+        nMD.put(MSG_SHADERS_VERTEX_COMPILE_ERROR, "Generic Vertex Shader Compiler Issue, I think...");
+        nMD.put(MSG_SHADERS_FRAGMENT_COMPILE_ERROR, "Generic Fragment Shader Compiler Issue, I think...");
+        nMD.put(MSG_SHADERS_LINK_ERROR, "Generic Shader Link Issue, I think...");
+        nMD.put(MSG_UNBIND_OFFSET_WARNING, "An unbind attempt was made to remove an offset that wasn't bound to the objects.");
+        nMD.put(MSG_OUT_OF_OBJECT_MEMORY, "Out of object memory!");
+        nMD.put(MSG_EMPTY_WRAPPER_CREATED, "An empty wrapper was created.");
+        nMD.put(MSG_UNKNOWN_WRAPPED_OBJECT, "An unknown wrapped object was queried.");
+        nMD.put(MSG_ALREADY_WRAPPED, "Yikes! SEdoubleWrappedObjects was disabled and a object was wrapped twice!");
+        nMD.put(MSG_MISSING_DEPTH_INFO, "Yikes! SEwrappedObjectDepth was switched unexpectedly!");
+        nMD.put(MSG_MISSING_TEXTURE, "Generic Missing Texture, I think...");
+        nMD.put(MSG_TEXTURE_LOAD_ERROR, "A texture failed to load!");
+        nMD.put(MSG_INCOMPATIBLE_MATRICES, "Incompatible Matrices!");
+        nMD.put(MSG_NULL_TEXTURE, "An operation was passed a null texture!");
+        nMD.put(MSG_OUT_OF_TEXTURE_MEMORY, "Out of texture memory!");
+        nMD.put(MSG_INCOMPATIBLE_CONTEXT, "The current context cannot handle an operation!");
+        return nMD;
+    }
     
-    //The GLFW window.
+    private static final HashMap<Integer, String> MESSAGE_DESCRIPTIONS = messageDescriptions();
+    
+    /**
+     * Adds a message description to message msg.
+     * @param msg The message to have it's description changed.
+     * @param description The description to add.
+     * @return The passed msg variable.
+     */
+    public static int SEaddMessageDescription(int msg, String description) {
+        if (!SEpreventDoubleDescriptions || MESSAGE_DESCRIPTIONS.get(msg) == null)
+            MESSAGE_DESCRIPTIONS.put(msg, description);
+        return msg;
+    }
+    
+    /**
+     * Gets the description of message msg.
+     * @param msg The message to query the description of.
+     * @return The description of the message msg.
+     */
+    public static String SEgetMessageDescription(int msg) { return MESSAGE_DESCRIPTIONS.get(msg); }
+    
+    private static boolean hasWarnedLWDPrevented = false;
+    
+    /**
+     * Logs a message with a description.
+     * @param type The type of message.
+     * @param bindingPoint The message to send.
+     * @param msg The new description of the message.
+     */
+    public static void logWithDescription(byte type, int bindingPoint, String msg) {
+        if (hasWarnedLWDPrevented && SEpreventDoubleDescriptions) {
+            log(MSG_TYPE_OPT, MSG_LOG_WITH_DESCRIPTION_WARNING);
+            hasWarnedLWDPrevented = true;
+        }
+        String lastDesc = SEgetMessageDescription(bindingPoint);
+        SEaddMessageDescription(bindingPoint, msg);
+        log(type, bindingPoint);
+        SEaddMessageDescription(bindingPoint, lastDesc);
+    }
+    
+    /**
+     * If {@link engine.SEEngine#SEcoreDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
+     * The description of {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT} should be equal to msg at the time during a single threaded application.
+     * @param msg A description of the debug message.
+     */
+    public static void debug(String msg) { if (SEcoreDebug) logWithDescription(MSG_TYPE_DEBUG, MSG_DEBUG_BINDING_POINT, msg); }
+    
     private static long window = NULL;
     
-    //Your program, program functions and program data all here for convenient
-    //access.
-    private static SEProgram program;
+    private static SEControlledProgram program;
     private static SEProgramData programData;
     
-    //The width and height of the window.
-    protected static float scWidth = 600, scHeight = 600;
+    /**
+    * Width of the current window.
+    */
+    protected static float scWidth = 600;
+    /**
+     * Height of the current window.
+     */
+    protected static float scHeight = 600;
     
-    //A function to clean up the engine before closing.
     private static void close() {
         SEisRunning = false;
-        log(MSG_INFO, "---Close---");
+        log(MSG_TYPE_INFO, MSG_EXIT);
         glfwDestroyWindow(window);
         glfwTerminate();
     }
     
-    //Draws a wrapped object when render time comes.
     private static void drawWrappedObject(SEWrappedObj wObj) {
         SEIShaders.matrix(wObj.matrix);
         int[] totalOffset = new int[2];
@@ -154,10 +260,9 @@ public class SEEngine {
         SEIShaders.matrix_center(xCen, yCen);
         glMultiDrawArrays(GL_QUADS, wObj.drawRangesStart, wObj.drawRangesCount);
     }
-    
-    //Renders everything availible.
+     
     private static void render() {
-        if (SEuseWrappedObjects) {
+        if (SEwrappedObjects) {
             if (SEwrappedObjectDepth) {
                 int head = SEObjects.first[0];
                 for (int a = 0; a < SEObjects.knownObjects.size(); a++) {
@@ -175,15 +280,15 @@ public class SEEngine {
         }
     }
     
-    //Is true once a warning (triggered by calling SEdraw with SEdrawOnCommand
-    //disabled) has been issued. Used for one time warnings.
     private static boolean hasWarnedSEdrawOnCommand = false;
-    
-    //Completely updates the screen. Use for when SEdrawOnCommand is enabled (or
-    //when the screen no longer updating).
+
+    /**
+     * Updates the screen.
+     * If {@link engine.SEEngine#SEdrawOnCommand} is disabled, this function is called automatically.
+     */
     public static void SEdraw() {
         if (!hasWarnedSEdrawOnCommand && !SEdrawOnCommand) {
-            log(MSG_OPT, "SEdraw was called even though the frame was going to be drawn anyway. Maybe you're looking for enabling SEdrawOnCommand?");
+            log(MSG_TYPE_OPT, MSG_DRAW_WARNING);
             hasWarnedSEdrawOnCommand = true;
         }
         glClear(GL_COLOR_BUFFER_BIT);
@@ -191,27 +296,28 @@ public class SEEngine {
         glfwSwapBuffers(window);
     }
     
-    //Fps calculation variables...
     private static int majorfps = 0;
     private static int minorfps = 0;
     private static SERLogic.Alarm fpsAlarm = new SERLogic.Alarm();
    
-    //Is true once a warning (triggered by calling SEgetFPS with SEcalcFPS
-    //disabled) has been issued. Used for one time warnings.
     private static boolean hasWarnedSEcalcFPS = false;
-    
-    //Gets the current FPS. Updates every second when SEcalcFPS is enabled.
+
+    /**
+     * Returns the current FPS count.
+     * The FPS count updates every second.
+     * Will not provide an accurate value if {@link engine.SEEngine#SEcalcFPS} has not been enabled for at least one second up to the call.
+     * @return The current FPS (Frames Per Second) of the program.
+     */
     public static int SEgetFPS() {
         if (!hasWarnedSEcalcFPS && !SEcalcFPS) {
-            log(MSG_OPT, "A call to SEgetFPS() was made, but SEcalcFPS was disabled, and the FPS may not be accurate.");
+            log(MSG_TYPE_OPT, MSG_GET_FPS_WARNING);
             hasWarnedSEcalcFPS = true;
         }
         return majorfps;
     }
     
-    //Main program loop
     private static void loop() {
-        log(MSG_INFO, "---Loop---");
+        log(MSG_TYPE_INFO, MSG_LOOP);
         while (!glfwWindowShouldClose(window) && !SEshouldQuit) {
             if (SEcalcFPS) {
                 minorfps++;
@@ -228,21 +334,18 @@ public class SEEngine {
             }
             if (SEcatchOpenGLErrors) {
                 int error = glGetError();
-                if (error != GL_NO_ERROR) log(MSG_OPENGL, "An OpenGL error has occured: " + error);
+                if (error != GL_NO_ERROR) logWithDescription(MSG_TYPE_OPENGL, MSG_OPENGL_FEEDBACK_ERROR, "New OpenGL error: " + error);
             }
             glfwPollEvents();
         }
     }
     
-    //Ressource function for calculating inheritance.
     private static boolean shouldInherit(byte inh, int oldVal, int newVal) {
         return (inh >= INHERIT_MOST || (inh == INHERIT_MINIMUM && oldVal >= newVal));
     }
     
-    
-    //Ressource function for SEswitchPrograms(SEProgram, boolean).
-    private static SEProgram SEswitchPrograms(SEProgram newProgram, boolean doSetup, boolean doChanges) {
-        SEProgram oldProgram = program;
+    private static SEControlledProgram SEswitchPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
+        SEControlledProgram oldProgram = program;
         SEProgramData oldProgramData = programData;
         SEProgramData newProgramData = newProgram.program();
         if (doChanges) {
@@ -252,14 +355,14 @@ public class SEEngine {
                 glfwSetWindowSize(window, newProgramData.windowWidth, newProgramData.windowHeight);
             SERImages.components = newProgramData.textureComponents;
             if (oldProgramData.textureComponents != newProgramData.textureComponents) {
-                if (SERImages.components == 1) SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_GREYSCALE;
+                if (SERImages.components == 1) SEIShaders.fragComponentMode = FRAG_MODE_GREYSCALE;
                 else if (SERImages.components == 4) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 }
-                else if (SERImages.components >= SEProgramData.FOURTH_COMPONENT_AS_DISCARD) {
-                    SERImages.components = 4; SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_ROUND_ALPHA; }
-                if (!SEIShaders.loadProgram()) { log(MSG_FAIL, "Could not load shaders!"); return null; }
+                else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
+                    SERImages.components = 4; SEIShaders.fragComponentMode = FRAG_MODE_ROUND_ALPHA; }
+                if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL, MSG_SHADERS_ERROR); return null; }
             }
             SERImages.components = (byte)Math.min(newProgramData.textureComponents, 4);
             if (
@@ -285,75 +388,107 @@ public class SEEngine {
             glClearColor(newProgramData.bkgColor[0], newProgramData.bkgColor[1], newProgramData.bkgColor[2], newProgramData.bkgColor[3]);
             msgFuncExists = newProgramData.messageFunc != null;
         }
-        if (!isCompatible(newProgramData.compatibleVersions)) { log(MSG_FAIL, "New program passed through SEswitchPrograms is not compatible."); return oldProgram; }
+        if (!isCompatible(newProgramData.compatibleVersions)) { log(MSG_TYPE_FAIL, MSG_INCOMPATIBLE_PROGRAM); return oldProgram; }
         program = newProgram;
         programData = newProgramData;
         if (doSetup) newProgram.setup();
         return oldProgram;
     }
     
-    //Switches the current program with a new program supplied through
-    //newProgram. If doSetup is true, the setup function is called. Keep
-    //doSetup true if you want a proper setup for newProgram. Set to false
-    //if the program has already initialized. isFullScreen proprety of the
-    //program is ignored. Possibly buggy.
-    public static SEProgram SEswitchPrograms(SEProgram newProgram, boolean doSetup) {
+    /**
+     * Switches the current program with a new program provided as newProgram.
+     * To initialize SEEngine, use {@link engine.SEEngine#SEstart(SEControlledProgram)}
+     * @param newProgram The program to replace the old one.
+     * @param doSetup If true, newProgram will have it's {@link engine.SEControlledProgram#setup()} method called.
+     * @return The last program that was running.
+     */
+    public static SEControlledProgram SEswitchPrograms(SEControlledProgram newProgram, boolean doSetup) {
         return SEswitchPrograms(newProgram, doSetup, true);
     }
     
-    //A basic void no params for SEque.
-    public static interface SEqueFunc { public void func(); }
+    /**
+     * A simple one void function interface.
+     * Use with {@link engine.SEEngine#SEque(SEqueFunc)}
+     */
+    public static interface SEqueFunc {
+        /**
+         * Contains code that will be used for {@link engine.SEEngine#SEque(SEqueFunc)}
+         */
+        public void func();
+    }
     
-    //A list of all SEqueFuncs that have been qued with SEque.
     private static ArrayList<SEqueFunc> quedFuncs = new ArrayList<>();
     
-    //Ques the function func till right before at least one setup call has run.
-    //If a program has already been setup properly, the function is called on
-    //the spot.
+    /**
+     * Ques one function to be called right before the program's setup method is called or immediately if the engine has already initialized.
+     * @param func The code/interface to be called once the engine has setup.
+     */
     public static void SEque(SEqueFunc func) {
         if (SEisRunning) func.func();
         else quedFuncs.add(func);
     }
     
-    //Profile of all the org.lwjgl.GLFW.GLFW GLFW_KEYs. just look in this array
-    //for a GLFW_KEY. If it's true, it's currently being pressed down.
+    /**
+     * Keeps an array of all GLFW_KEY_ constants and their position on the keyboard.
+     * Usually, if a key is pressed down on the keyboard, it's respective GLFW_KEY_ constant will be true here.
+     * @deprecated
+     */
     public static boolean[] keys = new boolean[348];
-    
-    //Essentially the same thing of looking into the keys array, except this
-    //gets it's data directly from GLFW.
+
+    /**
+     * Gets a specific key's state on the keyboard.
+     * If a key is currently pressed down, it will return true.
+     * @param key The key being queried. One of the many GLFW_KEY_ constants.
+     * @return Returns either true if the key is being pressed and false otherwise.
+     */
     public static boolean SEgetKeyPosition(int key) { return glfwGetKey(window, key) == GLFW_PRESS; }
     
-    //Initialises SEEngine. Passed a class that implements SEProgram and returns
-    //a valid SEProgramData structure from it's program function. From that
-    //information, the engine will do it's best to set everything up. Called
-    //from SEstart(SEProgram), the actual initialiser for your program.
-    private static boolean init(SEProgram prog) {
+    private static boolean init(SEControlledProgram prog) {
         program = prog;
         programData = prog.program();
         if (programData.messageFunc != null) msgFuncExists = true;
-        log(MSG_INFO, "---Init---");
-        if (!glfwInit()) { log(MSG_FAIL_FATAL, "GLFW failed to start."); return false; }
+        log(MSG_TYPE_INFO, MSG_INIT);
+        if (!glfwInit()) { log(MSG_TYPE_FAIL_FATAL, MSG_GLFW_ERROR); return false; }
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 1);
         window = glfwCreateWindow(programData.windowWidth, programData.windowHeight, programData.programName, programData.isFullScreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-        if (window == NULL) { log(MSG_FAIL_FATAL, "Could not create window!"); return false; }
+        if (window == NULL) { log(MSG_TYPE_FAIL_FATAL, MSG_WINDOW_ERROR); return false; }
         glfwMakeContextCurrent(window);
-        glfwSetKeyCallback(window, (long window, int key, int scancode, int action, int mods)->{
+        glfwSetKeyCallback(window, (long windowM, int key, int scancode, int action, int mods)->{
             if (action == GLFW_PRESS) keys[key] = true;
             else if (action == GLFW_RELEASE) keys[key] = false;
             programData.keyFunc.key(key, action);
         });
+        glfwSetCursorPosCallback(window, (long windowM, double x, double y) -> {
+            programData.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
+            for (SEObjects.SEButtonBundle bundle : SEObjects.buttons) {
+                if (SERLogic.isPointColliding((int)x, (int)y, bundle.x, bundle.y, bundle.w, bundle.h)) {
+                    bundle.func.func(bundle, MOUSE_MOVE);
+                    if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, MOUSE_ENTER);
+                    } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
+                }
+            }
+        });
+        glfwSetMouseButtonCallback(window, (long windowM, int button, int action, int mods) -> {
+            double[] x = new double[1], y = new double[1];
+            glfwGetCursorPos(window, x, y);
+            programData.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
+            for (SEObjects.SEButtonBundle bundle : SEObjects.buttons)
+                if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h)) bundle.func.func(bundle, action == GLFW_PRESS ? MOUSE_PRESS : MOUSE_RELEASE);
+        });
         GL.createCapabilities();
         SERImages.components = programData.textureComponents;
-        if (SERImages.components == 1) SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_GREYSCALE;
+        if (SERImages.components == 1) SEIShaders.fragComponentMode = FRAG_MODE_GREYSCALE;
         else if (SERImages.components == 4) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        else if (SERImages.components >= SEProgramData.FOURTH_COMPONENT_AS_DISCARD) {
-            SERImages.components = 4; SEIShaders.fragComponentMode = SEIShaders.FRAG_MODE_ROUND_ALPHA; }
-        if (!SEIShaders.loadProgram()) { log(MSG_FAIL_FATAL, "Could not load shaders!"); return false; }
-        if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(MSG_FAIL_FATAL, "Incompatible SE version."); return false; }
+        else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
+            SERImages.components = 4; SEIShaders.fragComponentMode = FRAG_MODE_ROUND_ALPHA; }
+        if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_ERROR); return false; }
+        if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(MSG_TYPE_FAIL_FATAL, MSG_INCOMPATIBLE_PROGRAM); return false; }
+        SETextures.gpuMaxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
+        debug("Max texture size: " + SETextures.gpuMaxTextureSize);
         SEObjects.loadObjects(programData.maxObjects);
         SETextures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
         scWidth = programData.windowWidth; scHeight = programData.windowHeight;
@@ -364,14 +499,19 @@ public class SEEngine {
         return true;
     }
     
-    //The current SEEngine version. SEAlpha1b
-    public static String SEversion() { return "SEAlpha1c"; }
+    /**
+     * Returns the current SEEngine version.
+     * @return The current SEEngine version.
+     */
+    public static String SEversion() { return "SEAlpha2a"; }
     
-    //Starts SEEngine. Pass a class that implements SEProgram where the program
-    //function returns a valid SEProgramData (aka, not null). We'll handle the
-    //thread from here. Once the program has terminated, either through an error
-    //or SEshouldQuit, the function returns too.
-    public static void SEstart(SEProgram prog) {
+    /**
+     * Starts SEEngine.
+     * This function will not return until the program passed has also finished running (through {@link engine.SEEngine#SEshouldQuit}) or the user closes the window.
+     * The active program can be switched using {@link engine.SEEngine#SEswitchPrograms(SEControlledProgram, boolean)}.
+     * @param prog The that will be running.
+     */
+    public static void SEstart(SEControlledProgram prog) {
         if (init(prog)) loop();
         close();
     }
