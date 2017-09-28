@@ -107,7 +107,7 @@ public class SEEngine {
         vers.put("SEEarly0", 0); vers.put("SEEarly1", 1); vers.put("SEEarly2", 2);
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
         vers.put("SEAlpha1a", 6); vers.put("SEAlpha1b", 7); vers.put("SEAlpha1c", 8);
-        vers.put("SEAlpha2a", 9);
+        vers.put("SEAlpha2a", 9); vers.put("SEAlpha2b", 10);
         return vers;
     }
     private static final HashMap<String, Integer> VERSIONS = versions();
@@ -427,13 +427,6 @@ public class SEEngine {
         if (SEisRunning) func.func();
         else quedFuncs.add(func);
     }
-    
-    /**
-     * Keeps an array of all GLFW_KEY_ constants and their position on the keyboard.
-     * Usually, if a key is pressed down on the keyboard, it's respective GLFW_KEY_ constant will be true here.
-     * @deprecated
-     */
-    public static boolean[] keys = new boolean[348];
 
     /**
      * Gets a specific key's state on the keyboard.
@@ -455,8 +448,6 @@ public class SEEngine {
         if (window == NULL) { log(MSG_TYPE_FAIL_FATAL, MSG_WINDOW_ERROR); return false; }
         glfwMakeContextCurrent(window);
         glfwSetKeyCallback(window, (long windowM, int key, int scancode, int action, int mods)->{
-            if (action == GLFW_PRESS) keys[key] = true;
-            else if (action == GLFW_RELEASE) keys[key] = false;
             programData.keyFunc.key(key, action);
         });
         glfwSetCursorPosCallback(window, (long windowM, double x, double y) -> {
@@ -465,8 +456,8 @@ public class SEEngine {
                 if (SERLogic.isPointColliding((int)x, (int)y, bundle.x, bundle.y, bundle.w, bundle.h)) {
                     bundle.func.func(bundle, MOUSE_MOVE);
                     if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, MOUSE_ENTER);
-                    } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
-                }
+                    }
+                } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
             }
         });
         glfwSetMouseButtonCallback(window, (long windowM, int button, int action, int mods) -> {
@@ -503,7 +494,7 @@ public class SEEngine {
      * Returns the current SEEngine version.
      * @return The current SEEngine version.
      */
-    public static String SEversion() { return "SEAlpha2a"; }
+    public static String SEversion() { return "SEAlpha2b"; }
     
     /**
      * Starts SEEngine.

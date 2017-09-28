@@ -37,26 +37,6 @@ public class SERLogic {
     public static String asset(String assetPath) { try { return SERLogic.class.getResource("/" + assetPath).getPath(); } catch (Exception e) { return null; } }
 
     /**
-     * Contains start/count values for specifying ranges.
-     * @deprecated
-     */
-    public static class Range {
-        protected int start, count;
-
-        /**
-         * Creates a new Range object starting at s and going on for c elements.
-         * @param s The start of the range.
-         * @param c The amount of objects in the range.
-         */
-        public Range(int s, int c) { start = s; count = c; }
-        /**
-         * Blank initializer for Range.
-         */
-        public Range() {}
-        
-        @Override public boolean equals(Object a) { Range ar = (Range)a; return start == ar.start && count == ar.count; }
-    }
-    /**
      * Stores an array of floats along with a width and height for 2D storage.
      */
     public static class Data {

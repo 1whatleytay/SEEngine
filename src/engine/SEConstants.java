@@ -66,15 +66,15 @@ public class SEConstants {
     /**
      * Direction: Positive Y towards top.
      */
-    protected static final byte DIRECTION_BOTTOM_TO_TOP = 0x31;
+    public static final byte DIRECTION_BOTTOM_TO_TOP = 0x31;
     /**
      * Direction: Positive X towards right.
      */
-    protected static final byte DIRECTION_LEFT_TO_RIGHT = 0x32;
+    public static final byte DIRECTION_LEFT_TO_RIGHT = 0x32;
     /**
      * Direction: Positive X towards left.
      */
-    protected static final byte DIRECTION_RIGHT_TO_LEFT = 0x33;
+    public static final byte DIRECTION_RIGHT_TO_LEFT = 0x33;
     
     /**
     * Indicates a debug message.
@@ -83,35 +83,35 @@ public class SEConstants {
     /**
      * Indicates an informatic message.
      */
-    protected static final byte MSG_TYPE_INFO = 0x41;
+    public static final byte MSG_TYPE_INFO = 0x41;
     /**
      * Indicates a process requiring optimization.
      */
-    protected static final byte MSG_TYPE_OPT = 0x42;
+    public static final byte MSG_TYPE_OPT = 0x42;
     /**
      * Indicates a process requiring optimization that may screw with the functionality of your program.
      */
-    protected static final byte MSG_TYPE_OPT_FUNC = 0x43;
+    public static final byte MSG_TYPE_OPT_FUNC = 0x43;
     /**
      * Indicates a failure in either the engine or the program.
      */
-    protected static final byte MSG_TYPE_FAIL = 0x44;
+    public static final byte MSG_TYPE_FAIL = 0x44;
     /**
      * Indicates an incompatibility or complete failure in the engine that requires the engine to abort.
      */
-    protected static final byte MSG_TYPE_FAIL_FATAL = 0x45;
+    public static final byte MSG_TYPE_FAIL_FATAL = 0x45;
     /**
      * Indicates an error in OpenGL.
      */
-    protected static final byte MSG_TYPE_OPENGL = 0x46;
+    public static final byte MSG_TYPE_OPENGL = 0x46;
     /**
      * Indicates a message that contains something else.
      */
-    protected static final byte MSG_TYPE_OTHER = 0x47;
+    public static final byte MSG_TYPE_OTHER = 0x47;
         /**
          * Indicates a message delivered to the current program by an external interface.
          */
-    protected static final byte MSG_TYPE_EXTERNAL = 0x48;
+    public static final byte MSG_TYPE_EXTERNAL = 0x48;
     
     /**
      * Inherits nothing from the previous program.
@@ -120,11 +120,11 @@ public class SEConstants {
     /**
      * Inherits values that are higher or equal to the current program data.
      */
-    protected static final byte INHERIT_MINIMUM = 0x51;
+    public static final byte INHERIT_MINIMUM = 0x51;
     /**
      * Inherits everything possible.
      */
-    protected static final byte INHERIT_MOST = 0x52;
+    public static final byte INHERIT_MOST = 0x52;
     
     /**
      * A Mouse Action where a mouse have moved within the specified area.
@@ -133,19 +133,19 @@ public class SEConstants {
     /**
      * Mouse Action: A mouse button has been pressed down within the specified area.
      */
-    protected static final byte MOUSE_PRESS = 0x61;
+    public static final byte MOUSE_PRESS = 0x61;
     /**
      * Mouse Action: A mouse button has been let go the specified area.
      */
-    protected static final byte MOUSE_RELEASE = 0x62;
+    public static final byte MOUSE_RELEASE = 0x62;
     /**
      * Mouse Action: A mouse has entered the specified area.
      */
-    protected static final byte MOUSE_ENTER = 0x63;
+    public static final byte MOUSE_ENTER = 0x63;
     /**
      * Mouse Action: A mouse has exited the specified area.
      */
-    protected static final byte MOUSE_EXIT = 0x64;
+    public static final byte MOUSE_EXIT = 0x64;
     
     /**
      * There was a generic, unspecific and broad event.
