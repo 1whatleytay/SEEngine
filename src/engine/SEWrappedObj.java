@@ -1,39 +1,98 @@
+/*
+ * SEEngine OpenGL 2.0 Engine
+ * Copyright (C) 2017  desgroup
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package engine;
 
 import java.util.*;
-
-//The SEWrappedObj class contains multiple objects. With it's power, you can
-//create offsets that apply to certain groups of objects, rotate or scale the
-//objects within, or change the overall depth of the objects compared to other
-//SEWrappedObj structures. To use these, make sure SEuseWrappedObjects is
-//enabled. Otherwise, the changed done here will be ignored.
+/**
+ * A wrapper adding extra functionality to normal objects.
+ * Make sure {@link engine.SEEngine#SEwrappedObjects} is enabled or else wrapped objects will not have an effect.
+ * @author desgroup
+ * @version SEAlpha2a
+ */
 public class SEWrappedObj {
-    //The objects that are currently wrapped.
+    /**
+     * All contained objects. 
+     */
     protected SEObj[] objs;
-    //The draw ranges to use with glMultiDrawArrays(int, int[], int[]).
-    protected int[] drawRangesStart, drawRangesCount;
+
+    protected int[]
+            /**
+             * Start of a current draw range.
+             */
+            drawRangesStart,
+            /**
+             * Amount of objects in a current draw range.
+             */
+            drawRangesCount;
+
+    /**
+     * All offsets attached to this wrapped object.
+     */
     protected ArrayList<String> offsetNames = new ArrayList<>();
-    //A matrix that can rotate or scale the wrapped objects. Set with calls to
-    //SEresetMatrix, SErotateMatrix, SEscaleMatrix and SEcustomMatrix.
+
+    /**
+     * The current matrix attached to this wrapped object.
+     */
     protected SERLogic.Data matrix;
-    //Determines if the object in matrixCenter will be used as the matrix center
-    //of the SEWrappedObj or not.
+
+    /**
+     * Determines if {@link engine.SEWrappedObj#matrixCenter} (value of true) or {@link engine.SEWrappedObj#matrixCenterX}, {@link engine.SEWrappedObj#matrixCenterY} (value of false) will be used as a matrix center.
+     */
     protected boolean useObjectForMatrixCenter;
-    //The object that might be responsible for the matrix center. Set with
-    //SEmatrixCenter(SEWrappedObj, SEObj).
+
+    /**
+     * An object to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is true.
+     */
     protected SEObj matrixCenter;
-    //The numbers, in pixels that might be responsible for the matrix center.
-    //Set with SEmatrixCenter(SEWrappedObj, int, int)
-    protected int matrixCenterX, matrixCenterY;
-    //A value that may be used to speed up calls to SEdepth if
-    //SEexperimentalDepth is enabled.
-protected int pointerForDepth = -1;
-    //Gets the object at obj.
+    
+    protected int
+            /**
+             * An x coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+             */
+            matrixCenterX,
+            /**
+             * A y coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+             */
+            matrixCenterY;
+
+    /**
+     * Pointer to where this particular object is found in the array of all registered pointers.
+     */
+    protected int pointerForDepth = -1;
+
+    /**
+     * Gets a particular wrapped object.
+     * Modifications may be made.
+     * @param obj The index of the object to grab.
+     * @return The object at index obj.
+     */
     public SEObj getObject(int obj) { return objs[obj]; }
-    //Gets the array of SEObj that are wrapped.
+
+    /**
+     * Gets a copy of all the objects in this wrapped object.
+     * Modifications may be made to the objects.
+     * @return An array containing all the wrapped objects.
+     */
     public SEObj[] getObjects() { return Arrays.copyOf(objs, objs.length); }
-    //Generates the draw ranges that will actually draw the wrapped objects.
-    //Called once the wrapped objects have changed or once it's created.
+
+    /**
+     * Generates draw ranges for the current setup of objects.
+     */
     protected void genDrawRanges() {
         int maxLength = 0;
         for (SEObj obj : objs) { if (obj.object > maxLength) maxLength = obj.object; }
