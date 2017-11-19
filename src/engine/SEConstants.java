@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,78 @@ package engine;
 /**
  * Holds all constants the engine may use to communicate.
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SEConstants {
+    protected static class SEProgramBundle {
+        SEControlledProgram program;
+        SEProgramData programData;
+    }
+    protected static class SELayerBundle {
+        SEControlledLayer layer;
+        SELayerData layerData;
+    }
+    
+    public interface SEInfoFunc {
+        void func();
+    }
+    
+    /**
+     * A keyboard messaging interface for {@link engine.SEProgramData#keyFunc}.
+     */
+    public interface SEKeyFunc {
+        /**
+         * Called when a key is pressed, released or any other GLFW key related event.
+         * @param key The key where the action applies to. One of the GLFW_KEY_ constants.
+         * @param action The action applying to the key. A GLFW_ constant.
+         */
+        void key(int key, int action);
+    }
+
+    /**
+     * A mouse messaging interface for {@link engine.SEProgramData#mouseFunc}.
+     */
+    public interface SEMouseFunc {
+        /**
+         * Called when a mouse button is press, released, the mouse is moved or any other GLFW mouse/cursor related event.
+         * @param x X coordinate relative to the top left of the window of cursor at the time of the action.
+         * @param y Y coordinate relative to the top left of the window of cursor at the time of the action.
+         * @param button The mouse button where that action applies (if any). One of the GLFW_MOUSE_BUTTON_ constants.
+         * @param action The action applying to the mouse. One of the MOUSE_ constants.
+         */
+        void mouse(int x, int y, int button, int action);
+    }
+
+    /**
+     * A messaging interface for simple messages for {@link engine.SEProgramData#messageFunc}.
+     */
+    public interface SEMessageFunc {
+        /**
+         * Called when the engine wishes to send a message to the application.
+         * @param type The type of the message. One of the MSG_ constants.
+         * @param msg The specific message sent to your computer.
+         */
+        void msg(byte type, int msg);
+    }
+    
+    public static class SEFunctionBundle {
+        public SEFunctionBundle(SEKeyFunc key, SEMouseFunc mouse, SEMessageFunc message) {
+            keyFunc = key; mouseFunc = mouse; messageFunc = message;
+        }
+        
+        public SEFunctionBundle(SEFunctionBundle copy) {
+            keyFunc = copy.keyFunc;
+            mouseFunc = copy.mouseFunc;
+            messageFunc = copy.messageFunc;
+        }
+        
+        public SEFunctionBundle() {}
+        
+        public SEKeyFunc keyFunc = (int key, int action) -> {};
+        public SEMouseFunc mouseFunc = (int x, int y, int button, int action) -> {};
+        public SEMessageFunc messageFunc = (byte type, int msg) -> {};
+    }
+    
     /**
      * A global offset bound to every {@link engine.SEWrappedObj} unless {@link engine.SEEngine#SEpreventBindOriginOffset} was enabled on the creation of the object.
      */
@@ -271,4 +340,8 @@ public class SEConstants {
      * The current computer could not create the appropriate context to create your application.
      */
     public static final int MSG_INCOMPATIBLE_CONTEXT = 0x1b;
+    public static final int MSG_OPENAL_FEEDBACK_ERROR = 0x1c;
+    public static final int MSG_EXPERIMENTAL_SOUND_WARNING = 0x1d;
+    public static final int MSG_ADD_LAYER_WARNING = 0x1e;
+    public static final int MSG_UNKNOWN_LAYER = 0x1f;
 }

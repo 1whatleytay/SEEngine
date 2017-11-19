@@ -30,15 +30,15 @@ public class SEWrappedObj {
      */
     protected SEObj[] objs;
 
-    protected int[]
-            /**
-             * Start of a current draw range.
-             */
-            drawRangesStart,
-            /**
-             * Amount of objects in a current draw range.
-             */
-            drawRangesCount;
+    /**
+     * Start of a current draw range.
+     */
+    protected int[] drawRangesStart;
+
+    /**
+     * Amount of objects in a current draw range.
+     */
+    protected int[] drawRangesCount;
 
     /**
      * All offsets attached to this wrapped object.
@@ -59,16 +59,15 @@ public class SEWrappedObj {
      * An object to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is true.
      */
     protected SEObj matrixCenter;
-    
-    protected int
-            /**
-             * An x coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
-             */
-            matrixCenterX,
-            /**
-             * A y coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
-             */
-            matrixCenterY;
+
+    /**
+     * An x coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+     */
+    protected int matrixCenterX;
+    /**
+     * A y coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+     */
+    protected int matrixCenterY;
 
     /**
      * Pointer to where this particular object is found in the array of all registered pointers.

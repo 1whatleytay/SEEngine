@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify

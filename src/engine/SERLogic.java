@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ import static engine.SEConstants.*;
 /**
  * Contains basic structures and some basic logic processing functions.
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SERLogic {
     private SERLogic() {}
@@ -112,6 +112,26 @@ public class SERLogic {
      */
     public static boolean isPointColliding(int x, int y, int mx, int my, int mw, int mh) {
         return x > mx && x < mx + mw && y > my && y < my + mh;
+    }
+    
+    /**
+     * Returns true if the box x, y, w, h is colliding with the box mx, my, mw, mh.
+     * @param x The x coordinate of the first box.
+     * @param y The y coordinate of the first box.
+     * @param w The width of the first box.
+     * @param h The height of the first box.
+     * @param mx The x coordinate of the test region.
+     * @param my The y coordinate of the test region.
+     * @param mw The width of the test region.
+     * @param mh The height of the test region.
+     * @return True if the box is colliding with the test region.
+     */
+    public static boolean isBoxColliding(float x, float y, float w, float h, float mx, float my, float mw, float mh) {
+        return ((x >= mx && x <= mx + mw) || (x + w >= mx && x + w <= mx + mw)) && ((y >= my && y <= my + mh) || (y + h >= my && y + h <= my + mh));
+    }
+    
+    public static boolean isABoxColliding(float x, float y, float w, float h, float mx, float my, float mw, float mh) {
+        return isBoxColliding(x, y, w, h, mx, my, mw, mh) || isBoxColliding(mx, my, mw, mh, x, y, w, h);
     }
 
     /**

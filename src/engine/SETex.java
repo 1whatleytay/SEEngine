@@ -29,54 +29,52 @@ public class SETex {
      * Hidden basic constructor.
      */
     protected SETex() {}
-    
-    protected double
-            /**
-             * The x position where this texture starts in the main texture.
-             */
-            texX = 0,
-            /**
-             * The y position where this texture starts in the main texture.
-             */
-            texY = 0;
-    
-    protected double
-            /**
-             * The width of the texture.
-             */
-            texW = 0,
-            /**
-             * The height of the texture.
-             */
-            texH = 0;
+
+    /**
+     * The x position where this texture starts in the main texture.
+     */
+    protected double texX = 0;
+    /**
+     * The y position where this texture starts in the main texture.
+     */
+    protected double texY = 0;
+
+    /**
+     * The width of the texture.
+     */
+    protected double texW = 0;
+    /**
+     * The height of the texture.
+     */
+    protected double texH = 0;
 
     /**
      * Returns the x position of the texture in pixel coordinates.
      * @return The x position of the texture in pixel coordinates.
      * @deprecated
      */
-    public int getStartX() { return (int)(texX * (double)SETextures.getTexDimWidth()); }
+    @Deprecated public int getStartX() { return (int)(texX * (double)SETextures.getTexDimWidth()); }
 
     /**
      * Returns the y position of the texture in pixel coordinates.
      * @return The y position of the texture in pixel coordinates.
      * @deprecated
      */
-    public int getStartY() { return (int)(texY * (double)SETextures.getTexDimHeight()); }
+    @Deprecated public int getStartY() { return (int)(texY * (double)SETextures.getTexDimHeight()); }
 
     /**
      * Returns the width of the texture in pixel coordinates.
      * @return The width of the texture in pixel coordinates.
      * @deprecated
      */
-    public int getWidth() { return (int)(texW * (double)SETextures.getTexDimWidth()); }
+    @Deprecated public int getWidth() { return (int)(texW * (double)SETextures.getTexDimWidth()); }
 
     /**
      * Returns the height of the texture in pixel coordinates.
      * @return The height of the texture in pixel coordinates.
      * @deprecated
      */
-    public int getHeight() { return (int)(texH * (double)SETextures.getTexDimHeight()); }
+    @Deprecated public int getHeight() { return (int)(texH * (double)SETextures.getTexDimHeight()); }
     
     @Override public boolean equals(Object a) {
         SETex ar = (SETex)a;

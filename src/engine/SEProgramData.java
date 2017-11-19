@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 package engine;
 
 import static engine.SEConstants.*;
+import java.util.Arrays;
 
 /**
  * This data structure is returned from a call to {@link engine.SEProgram#program()}.
@@ -27,16 +28,28 @@ import static engine.SEConstants.*;
  * @version SEAlpha2a
  */
 public class SEProgramData {
-
-    public int
-            /**
-            * The width of the created window.
-            */
-            windowWidth = 600,
-            /**
-             * The height of the created window.
-             */
-            windowHeight = 600;
+    
+    public SEProgramData(SEProgramData copy) {
+        windowWidth = copy.windowWidth; windowHeight = copy.windowHeight;
+        programName = copy.programName; maxObjects = copy.maxObjects;
+        texMemoryWidth = copy.texMemoryWidth; texMemoryHeight = copy.texMemoryHeight;
+        compatibleVersions = copy.compatibleVersions; textureComponents = copy.textureComponents;
+        isFullScreen = copy.isFullScreen;
+        inheritData = copy.inheritData; useQuickClear = copy.useQuickClear;
+        bkgColor = Arrays.copyOf(copy.bkgColor, 4);
+        functions = new SEFunctionBundle(copy.functions);
+    }
+    
+    public SEProgramData() {}
+    
+    /**
+    * The width of the created window.
+    */
+    public int windowWidth = 600;
+    /**
+     * The height of the created window.
+     */
+    public int windowHeight = 600;
 
     /**
      * The name of the program.
@@ -50,19 +63,18 @@ public class SEProgramData {
      */
     public int maxObjects = 512;
     
-    public int
-            /**
-            * Maximum Texture Memory Width.
-            * This major texture is used to store every single loaded {@link engine.SETex} object.
-            * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
-            */
-            texMemoryWidth = 1024,
-            /**
-             * Maximum Texture Memory Height.
-             * This major texture is used to store every single loaded {@link engine.SETex} object.
-             * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
-             */
-            texMemoryHeight = 1024;
+    /**
+    * Maximum Texture Memory Width.
+    * This major texture is used to store every single loaded {@link engine.SETex} object.
+    * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
+    */
+    public int texMemoryWidth = 1024;
+    /**
+     * Maximum Texture Memory Height.
+     * This major texture is used to store every single loaded {@link engine.SETex} object.
+     * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
+     */
+    public int texMemoryHeight = 1024;
 
     /**
      * All compatible versions of SEEngine should be listed here separated by commas.
@@ -124,55 +136,7 @@ public class SEProgramData {
     }
     
     /**
-     * A keyboard messaging interface for {@link engine.SEProgramData#keyFunc}.
+     * Your program's supplied response functions.
      */
-    public interface SEKeyFunc { 
-
-        /**
-         * Called when a key is pressed, released or any other GLFW key related event.
-         * @param key The key where the action applies to. One of the GLFW_KEY_ constants.
-         * @param action The action applying to the key. A GLFW_ constant.
-         */
-        void key(int key, int action); }
-
-    /**
-     * A mouse messaging interface for {@link engine.SEProgramData#mouseFunc}.
-     */
-    public interface SEMouseFunc { 
-
-        /**
-         * Called when a mouse button is press, released, the mouse is moved or any other GLFW mouse/cursor related event.
-         * @param x X coordinate relative to the top left of the window of cursor at the time of the action.
-         * @param y Y coordinate relative to the top left of the window of cursor at the time of the action.
-         * @param button The mouse button where that action applies (if any). One of the GLFW_MOUSE_BUTTON_ constants.
-         * @param action The action applying to the mouse. One of the MOUSE_ constants.
-         */
-        void mouse(int x, int y, int button, int action); }
-
-    /**
-     * A messaging interface for simple messages for {@link engine.SEProgramData#messageFunc}.
-     */
-    public interface SEMessageFunc { 
-
-        /**
-         * Called when the engine wishes to send a message to the application.
-         * @param type The type of the message. One of the MSG_ constants.
-         * @param msg The specific message sent to your computer.
-         */
-        void msg(byte type, int msg); }
-    
-    /**
-     * Your program's supplied key function.
-     */
-    public SEKeyFunc keyFunc = (int key, int action)->{};
-
-    /**
-     * Your program's supplied mouse function.
-     */
-    public SEMouseFunc mouseFunc = (int x, int y, int button, int action)->{};
-
-    /**
-     * Your program's supplied message function.
-     */
-    public SEMessageFunc messageFunc = (byte type, int msg)->{};
+    public SEFunctionBundle functions = new SEFunctionBundle();
 }

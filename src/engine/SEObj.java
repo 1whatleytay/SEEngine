@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -49,33 +49,27 @@ public class SEObj {
      * Location in the OpenGL buffer {@link engine.SEObjects#mainBuffer} where the object data hides itself.
      */
     protected int object = 0;
-    
-    //Perform any changes to the variables x, y, w, h and tex, then call
-    //SEojSave(SEObj) to save your changes.
-    
-    //Coordinates in pixels on screen...
 
-    public int
-            /**
-            * The x coordinate of the object (in pixels).
-            * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
-            */
-            x = 0,
-            /**
-            * The y coordinate of the object (in pixels).
-            * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
-            */
-            y = 0,
-            /**
-            * The width of the object (in pixels).
-            * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
-            */
-            w = 0,
-            /**
-            * The height of the object (in pixels).
-            * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
-            */
-            h = 0;
+    /**
+    * The x coordinate of the object (in pixels).
+    * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
+    */
+    public int x = 0;
+    /**
+    * The y coordinate of the object (in pixels).
+    * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
+    */
+    public int y = 0;
+    /**
+    * The width of the object (in pixels).
+    * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
+    */
+    public int w = 0;
+    /**
+    * The height of the object (in pixels).
+    * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
+    */
+    public int h = 0;
 
     /**
      * The texture the object will show over itself.
@@ -83,21 +77,17 @@ public class SEObj {
      * If you make any changes, be sure to save them with {@link engine.SEObjects#SEobjSave(SEObj)}.
      */
     public SETex tex = new SETex();
-    
-    //The coordinate in pixels of the center of the object in pixels. Updates
-    //after a call to SEobjSave(SEObj) or genCenter().
 
-    public int
-            /**
-            * The x coordinate of the center of the object.
-            * Call {@link engine.SEObj#genCenter()} to update both centerX and centerY.
-            */
-            centerX = 0,
-            /**
-            * The y coordinate of the center of the object.
-            * Call {@link engine.SEObj#genCenter()} to update both centerX and centerY.
-            */
-            centerY = 0;
+    /**
+     * The x coordinate of the center of the object.
+     * Call {@link engine.SEObj#genCenter()} to update both centerX and centerY.
+     */
+    public int centerX = 0;
+    /**
+    * The y coordinate of the center of the object.
+    * Call {@link engine.SEObj#genCenter()} to update both centerX and centerY.
+    */
+    public int centerY = 0;
 
     /**
      * Updates the {@link engine.SEObj#centerX} and {@link engine.SEObj#centerY} variables.
@@ -110,5 +100,5 @@ public class SEObj {
      * @return The pointer to the object data in the OpenGL buffer {@link engine.SEObjects#mainBuffer}.
      * @deprecated
      */
-    public int getObjectName() { return object; }
+    @Deprecated public int getObjectName() { return object; }
 }
