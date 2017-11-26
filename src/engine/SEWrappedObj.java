@@ -30,15 +30,15 @@ public class SEWrappedObj {
      */
     protected SEObj[] objs;
 
-    protected int[]
-            /**
-             * Start of a current draw range.
-             */
-            drawRangesStart,
-            /**
-             * Amount of objects in a current draw range.
-             */
-            drawRangesCount;
+    /**
+     * Start of a current draw range.
+     */
+    protected int[] drawRangesStart;
+
+    /**
+     * Amount of objects in a current draw range.
+     */
+    protected int[] drawRangesCount;
 
     /**
      * All offsets attached to this wrapped object.
@@ -59,16 +59,15 @@ public class SEWrappedObj {
      * An object to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is true.
      */
     protected SEObj matrixCenter;
-    
-    protected int
-            /**
-             * An x coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
-             */
-            matrixCenterX,
-            /**
-             * A y coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
-             */
-            matrixCenterY;
+
+    /**
+     * An x coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+     */
+    protected int matrixCenterX;
+    /**
+     * A y coordinate to be used as a matrix center if {@link engine.SEWrappedObj#useObjectForMatrixCenter} is false.
+     */
+    protected int matrixCenterY;
 
     /**
      * Pointer to where this particular object is found in the array of all registered pointers.
@@ -94,17 +93,18 @@ public class SEWrappedObj {
      * Generates draw ranges for the current setup of objects.
      */
     protected void genDrawRanges() {
+        class Range { int start, count; }
         int maxLength = 0;
         for (SEObj obj : objs) { if (obj.object > maxLength) maxLength = obj.object; }
         boolean[] objsSpace = new boolean[maxLength + 1];
         for (SEObj obj : objs) { objsSpace[obj.object] = true; }
-        ArrayList<SERLogic.Range> ranges = new ArrayList<>();
+        ArrayList<Range> ranges = new ArrayList<>();
         boolean isNewRange = false;
-        SERLogic.Range cRange = new SERLogic.Range();
+        Range cRange = new Range();
         for (int a = 0; a < objsSpace.length; a++) {
             if (!isNewRange) {
                 if (objsSpace[a]) {
-                    cRange = new SERLogic.Range();
+                    cRange = new Range();
                     cRange.start = a;
                     isNewRange = true;
                 }
@@ -119,7 +119,7 @@ public class SEWrappedObj {
                 }
             }
         }
-        SERLogic.Range[] drawRanges = new SERLogic.Range[ranges.size()];
+        Range[] drawRanges = new Range[ranges.size()];
         ranges.toArray(drawRanges);
         drawRangesStart = new int[drawRanges.length]; drawRangesCount = new int[drawRanges.length];
         for (int a = 0; a < drawRanges.length; a++) {

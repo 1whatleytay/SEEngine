@@ -1,0 +1,12 @@
+nbproject
+test
+build
+dist
+META-INF
+out
+test
+build.xml
+manifest.mf
+.DS_Store
+.idea
+Spells Engine.iml

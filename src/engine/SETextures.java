@@ -25,7 +25,7 @@ import static engine.SEConstants.*;
 /**
  * Handles loading, storing and accessing textures.
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SETextures {
     private SETextures() {}
@@ -108,16 +108,16 @@ public class SETextures {
      * @param mainTex The texture to sample.
      * @param offX The x coordinate in pixels of the main texture to sample.
      * @param offY The y coordinate in pixels of the main texture to sample.
-     * @param width The width of the sampled texture.
-     * @param height The height of the sampled texture.
+     * @param w The width of the sampled texture.
+     * @param h The height of the sampled texture.
      * @return A sampled texture from mainTex.
      */
-    public static SETex SEsampleTexture(SETex mainTex, int offX, int offY, int width, int height) {
+    public static SETex SEsampleTexture(SETex mainTex, int offX, int offY, int w, int h) {
         SETex tex = new SETex();
         tex.texX = (mainTex.texX * width + offX) / width;
         tex.texY = (mainTex.texY * height + offY) / height;
-        tex.texW = (double)width / (double)width;
-        tex.texH = (double)height / (double)height;
+        tex.texW = (double)w / (double)width;
+        tex.texH = (double)h / (double)height;
         return tex;
     }
 
@@ -127,7 +127,7 @@ public class SETextures {
      * @param tex The data to overwrite the texture with.
      * @deprecated
      */
-    public static void SEoverrideTexture(SETex texture, Data tex) {
+    @Deprecated public static void SEoverrideTexture(SETex texture, Data tex) {
         int findX = (int)(texture.texX * width), findY = (int)(texture.texY * height);
         for (int x = 0; x < tex.width; x++)
             for (int y = 0; y < tex.height; y++)

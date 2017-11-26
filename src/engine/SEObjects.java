@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import static engine.SEConstants.*;
  *  Handles creating and editing objects.
  * Use static methods in this class to add, move and edit {@link engine.SEObj} and {@link engine.SEWrappedObj}
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SEObjects {
     private SEObjects() {}
@@ -320,28 +320,29 @@ public class SEObjects {
      */
     public static void SEvisible(SEObj obj, boolean value) {
         obj.isHidden = value;
-        if (value) {
+        if (value) objSave(obj);
+        else {
             SEObj.blank.object = obj.object;
             objSave(SEObj.blank);
-        } else objSave(obj);
+        }
     }
     
     /**
-     * A function to run when an event occurs within an {@link engine.SEObjects.SEButtonBundle}.
-     * Passed to {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)} to create a {@link engine.SEObjects.SEButtonBundle}.
+     * A function to run when an event occurs within an {@link engine.SEObjects.SEButton}.
+     * Passed to {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)} to create a {@link engine.SEObjects.SEButton}.
      */
     public static interface SEButtonFunction {
         /**
          * This function will be called when a message is need to be sent to the respective SEButtonBundle.
-         * @param obj The {@link engine.SEObjects.SEButtonBundle} that originated the call.
-         * @param action The action that occurred within the {@link engine.SEObjects.SEButtonBundle}. One of the MOUSE_ constants.
+         * @param obj The {@link engine.SEObjects.SEButton} that originated the call.
+         * @param action The action that occurred within the {@link engine.SEObjects.SEButton}. One of the MOUSE_ constants.
          */
-        void func(SEButtonBundle obj, byte action); }
+        void func(SEButton obj, byte action); }
 
     /**
      * Represents a region where mouse input is being listened to.
      */
-    public static class SEButtonBundle {
+    public static class SEButton {
         public int
                 /**
                  * The x position (relative to the top of the window, in pixels) where the region exists.
@@ -369,12 +370,12 @@ public class SEObjects {
     }
     
     /**
-     * A list of every {@link engine.SEObjects.SEButtonBundle} that exists.
+     * A list of every {@link engine.SEObjects.SEButton} that exists.
      */
-    protected static ArrayList<SEButtonBundle> buttons = new ArrayList<>();
+    protected static ArrayList<SEButton> buttons = new ArrayList<>();
     
     /**
-     * Creates a new {@link engine.SEObjects.SEButtonBundle} at x, y with a size of w width and h height and a message function of func.
+     * Creates a new {@link engine.SEObjects.SEButton} at x, y with a size of w width and h height and a message function of func.
      * @param x The x position (relative to the top of the window, in pixels) where the area starts.
      * @param y The x position (relative to the top of the window, in pixels) where the area starts.
      * @param w The width of the area.
@@ -382,8 +383,8 @@ public class SEObjects {
      * @param func The message function of the area. Will be called when one of the MOUSE_ constants occur.
      * @return A representation of the area. Changes made to the object will be reflected in the area.
      */
-    public static SEButtonBundle SEcreateButton(int x, int y, int w, int h, SEButtonFunction func) {
-        SEButtonBundle bundle = new SEButtonBundle();
+    public static SEButton SEcreateButton(int x, int y, int w, int h, SEButtonFunction func) {
+        SEButton bundle = new SEButton();
         bundle.x = x; bundle.y = y; bundle.w = w; bundle.h = h;
         bundle.func = func;
         buttons.add(bundle);
@@ -392,11 +393,11 @@ public class SEObjects {
 
     /**
      * Object version of {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)}.
-     * @param obj The object to have it's properties carried to the {@link engine.SEObjects.SEButtonBundle}. A change to the object will not update the bundle.
+     * @param obj The object to have it's properties carried to the {@link engine.SEObjects.SEButton}. A change to the object will not update the bundle.
      * @param func The message function of the area. Will be called when one of the MOUSE_ constant occur.
      * @return A representation of the area. Changes made to the object will be reflected in the area.
      */
-    public static SEButtonBundle SEcreateButton(SEObj obj, SEButtonFunction func) {
+    public static SEButton SEcreateButton(SEObj obj, SEButtonFunction func) {
         return SEcreateButton(obj.x, obj.y, obj.w, obj.h, func);
     }
     
@@ -510,7 +511,7 @@ public class SEObjects {
         if (!found) { SEEngine.log(MSG_TYPE_OPT, MSG_OUT_OF_OBJECT_MEMORY); }
         objectSpace[find] = true;
         obj.object = find; obj.x = x; obj.y = y; obj.w = w; obj.h = h; obj.tex = tex;
-        objectDrawSpace = Math.max(objectDrawSpace, find) + 1; // This math is incorrect, the +1 will always increment
+        objectDrawSpace = Math.max(objectDrawSpace, find + 1); // Let's try this. I didn't really think about this.
         SEobjSave(obj);
         return obj;
     }
@@ -570,6 +571,13 @@ public class SEObjects {
     }
     
     /**
+     * Deletes a wrapped object.
+     * Does not delete the objects within, simply removes the wrapper from the draw call.
+     * @param obj The wrapped object to delete.
+     */
+    public static void SEdeleteWrappedObject(SEWrappedObj obj) { knownObjects.set(obj.pointerForDepth, null); }
+    
+    /**
      * Lowers {@link engine.SEObjects#objectDrawSpace} to the lowest value without losing functionality.
      */
     public static void SEcollapseObjectDrawSpace() {
@@ -591,7 +599,7 @@ public class SEObjects {
      * Y direction.
      * 1 for normal, -1 for backwards.
      */
-    protected static byte ampY = 1;
+    protected static byte ampY = -1;
 
     /**
      * Applies one of DIRECTION_ constants.

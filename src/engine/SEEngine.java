@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ import static engine.SEConstants.*;
 /**
  * Handles starting the engine and controlling flow and features of the program(s).
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SEEngine {
     
@@ -62,11 +62,11 @@ public class SEEngine {
      */
     public static boolean SEdoubleWrappedObjects = false;
     /**
-     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link enigne.SEWrappedObj}.
+     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link engine.SEWrappedObj}
      */
     public static boolean SEwrappedObjectDepth = false;
     /**
-     * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEProgram)} as soon as the program returns.
+     * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEControlledProgram)} as soon as the program returns.
      * Using this option to quit the window (almost) insures a safe termination of GLFW and other libraries.
      */
     public static boolean SEshouldQuit = false;
@@ -75,7 +75,7 @@ public class SEEngine {
      * Meant for debugging the engine.
      * If unsure, leave  this feature off.
      */
-    public static boolean SEcoreDebug = false;
+    public static boolean SEuseDebug = false;
     /**
      * Disables automatic window drawing.
      * To continue drawing, re-enable this setting or call SEdraw() when you wish to update the screen.
@@ -87,13 +87,7 @@ public class SEEngine {
      */
     public static boolean SEcalcFPS = false;
     /**
-     * When enabled, a program is currently running.
-     * Changing this setting may have an effect on other applications, and will definitely have an effect on calls to SEque.
-     * If unsure, leave untouched.
-     */
-    public static boolean SEisRunning = false;
-    /**
-     * Prevents binding {@link enigine.SEObjects#ORIGIN_OFFSET} to all {@link engine.SEWrappedObj} on creation.
+     * Prevents binding {@link engine.SEConstants#ORIGIN_OFFSET} to all {@link engine.SEWrappedObj} on creation.
      */
     public static boolean SEpreventBindOriginOffset = false;
     /**
@@ -101,13 +95,16 @@ public class SEEngine {
      * Breaks {@link engine.SEEngine#logWithDescription(byte, int, String)} and descriptions that may be variable.
      */
     public static boolean SEpreventDoubleDescriptions = false;
+    public static boolean SEuseLayers = false;
+    
+    private static boolean isRunning = false;
     
     private static HashMap<String, Integer> versions() {
         HashMap<String, Integer> vers = new HashMap<>();
         vers.put("SEEarly0", 0); vers.put("SEEarly1", 1); vers.put("SEEarly2", 2);
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
         vers.put("SEAlpha1a", 6); vers.put("SEAlpha1b", 7); vers.put("SEAlpha1c", 8);
-        vers.put("SEAlpha2a", 9);
+        vers.put("SEAlpha2a", 9); vers.put("SEAlpha2b", 10); vers.put("SEAlpha3a", 11);
         return vers;
     }
     private static final HashMap<String, Integer> VERSIONS = versions();
@@ -142,7 +139,7 @@ public class SEEngine {
      * @param message A indicator of the specific message.
      */
     public static void log(byte type, int message) {
-        if (msgFuncExists) programData.messageFunc.msg(type, message);
+        if (msgFuncExists) programData.functions.messageFunc.msg(type, message);
         engineLog += SEgetMessageDescription(message) + "\n"; 
     }
     
@@ -176,6 +173,9 @@ public class SEEngine {
         nMD.put(MSG_NULL_TEXTURE, "An operation was passed a null texture!");
         nMD.put(MSG_OUT_OF_TEXTURE_MEMORY, "Out of texture memory!");
         nMD.put(MSG_INCOMPATIBLE_CONTEXT, "The current context cannot handle an operation!");
+        nMD.put(MSG_OPENAL_FEEDBACK_ERROR, "Generic OpenAL Error, I think...");
+        nMD.put(MSG_EXPERIMENTAL_SOUND_WARNING, "SESound is experimental. Please call loadSounds() again to complete sound setup.");
+        nMD.put(MSG_ADD_LAYER_WARNING, "A Layer is being added, but layers are currently disabled.");
         return nMD;
     }
     
@@ -220,11 +220,11 @@ public class SEEngine {
     }
     
     /**
-     * If {@link engine.SEEngine#SEcoreDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
+     * If {@link engine.SEEngine#SEuseDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
      * The description of {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT} should be equal to msg at the time during a single threaded application.
      * @param msg A description of the debug message.
      */
-    public static void debug(String msg) { if (SEcoreDebug) logWithDescription(MSG_TYPE_DEBUG, MSG_DEBUG_BINDING_POINT, msg); }
+    public static void debug(String msg) { if (SEuseDebug) logWithDescription(MSG_TYPE_DEBUG, MSG_DEBUG_BINDING_POINT, msg); }
     
     private static long window = NULL;
     
@@ -240,14 +240,26 @@ public class SEEngine {
      */
     protected static float scHeight = 600;
     
+    /**
+     * Gets the current window width.
+     * @return The current window width.
+     */
+    public static int SEgetWindowWidth() { return (int)scWidth; }
+    /**
+     * Gets the current window height.
+     * @return The current window height.
+     */
+    public static int SEgetWindowHeight() { return (int)scHeight; }
+    
     private static void close() {
-        SEisRunning = false;
+        isRunning = false;
         log(MSG_TYPE_INFO, MSG_EXIT);
         glfwDestroyWindow(window);
         glfwTerminate();
     }
     
     private static void drawWrappedObject(SEWrappedObj wObj) {
+        if (wObj == null) return;
         SEIShaders.matrix(wObj.matrix);
         int[] totalOffset = new int[2];
         for (String coffsetName : wObj.offsetNames) {
@@ -326,7 +338,9 @@ public class SEEngine {
                     minorfps = 0;
                 }
             }
+            if (SEuseLayers) { for (SELayerBundle bundle : knownLayers) bundle.layer.pre(); }
             program.update();
+            if (SEuseLayers) { for (SELayerBundle bundle : knownLayers) bundle.layer.post(); }
             if (!SEdrawOnCommand) {
                 glClear(GL_COLOR_BUFFER_BIT);
                 render();
@@ -344,15 +358,17 @@ public class SEEngine {
         return (inh >= INHERIT_MOST || (inh == INHERIT_MINIMUM && oldVal >= newVal));
     }
     
-    private static SEControlledProgram SEswitchPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
+    private static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
         SEControlledProgram oldProgram = program;
         SEProgramData oldProgramData = programData;
         SEProgramData newProgramData = newProgram.program();
         if (doChanges) {
             glfwSetWindowTitle(window, newProgramData.programName);
             if (oldProgramData.isFullScreen != newProgramData.isFullScreen && newProgramData.inheritData <= INHERIT_NONE);
-            if ((oldProgramData.windowWidth != newProgramData.windowWidth || oldProgramData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData <= INHERIT_NONE)
+            if ((oldProgramData.windowWidth != newProgramData.windowWidth || oldProgramData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData <= INHERIT_NONE) {
                 glfwSetWindowSize(window, newProgramData.windowWidth, newProgramData.windowHeight);
+                scWidth = newProgramData.windowWidth; scHeight = newProgramData.windowHeight;
+            }
             SERImages.components = newProgramData.textureComponents;
             if (oldProgramData.textureComponents != newProgramData.textureComponents) {
                 if (SERImages.components == 1) SEIShaders.fragComponentMode = FRAG_MODE_GREYSCALE;
@@ -386,11 +402,11 @@ public class SEEngine {
                 SETextures.clearTextures(newProgramData.texMemoryWidth, newProgramData.texMemoryHeight);
             }
             glClearColor(newProgramData.bkgColor[0], newProgramData.bkgColor[1], newProgramData.bkgColor[2], newProgramData.bkgColor[3]);
-            msgFuncExists = newProgramData.messageFunc != null;
+            msgFuncExists = newProgramData.functions.messageFunc != null;
         }
         if (!isCompatible(newProgramData.compatibleVersions)) { log(MSG_TYPE_FAIL, MSG_INCOMPATIBLE_PROGRAM); return oldProgram; }
         program = newProgram;
-        programData = newProgramData;
+        programData = new SEProgramData(newProgramData);
         if (doSetup) newProgram.setup();
         return oldProgram;
     }
@@ -402,38 +418,58 @@ public class SEEngine {
      * @param doSetup If true, newProgram will have it's {@link engine.SEControlledProgram#setup()} method called.
      * @return The last program that was running.
      */
-    public static SEControlledProgram SEswitchPrograms(SEControlledProgram newProgram, boolean doSetup) {
-        return SEswitchPrograms(newProgram, doSetup, true);
+    public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup) {
+        return SEswapPrograms(newProgram, doSetup, true);
+    }
+    
+    public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram) {
+        return SEswapPrograms(newProgram, true);
     }
     
     /**
-     * A simple one void function interface.
-     * Use with {@link engine.SEEngine#SEque(SEqueFunc)}
+     * Changes the current background color.
+     * @param newColor The new background color. Should be an array with 4 elements.
      */
-    public static interface SEqueFunc {
-        /**
-         * Contains code that will be used for {@link engine.SEEngine#SEque(SEqueFunc)}
-         */
-        public void func();
+    public static void SEchangeBackgroundColor(float[] newColor) {
+        glClearColor(newColor[0], newColor[1], newColor[2], newColor[3]);
     }
     
-    private static ArrayList<SEqueFunc> quedFuncs = new ArrayList<>();
+    private static ArrayList<SEInfoFunc> quedFuncs = new ArrayList<>();
     
     /**
      * Ques one function to be called right before the program's setup method is called or immediately if the engine has already initialized.
      * @param func The code/interface to be called once the engine has setup.
      */
-    public static void SEque(SEqueFunc func) {
-        if (SEisRunning) func.func();
+    public static void SEaddQue(SEInfoFunc func) {
+        if (isRunning) func.func();
         else quedFuncs.add(func);
     }
     
-    /**
-     * Keeps an array of all GLFW_KEY_ constants and their position on the keyboard.
-     * Usually, if a key is pressed down on the keyboard, it's respective GLFW_KEY_ constant will be true here.
-     * @deprecated
-     */
-    public static boolean[] keys = new boolean[348];
+    private static boolean hasWarnedDisabledLayers = false;
+    
+    private static ArrayList<SELayerBundle> knownLayers = new ArrayList<>();
+    
+    public static void SEaddLayer(SEControlledLayer layer) {
+        SELayerData layerData = layer.layer();
+        if (!SEuseLayers && !hasWarnedDisabledLayers) { log(MSG_TYPE_INFO, MSG_ADD_LAYER_WARNING); hasWarnedDisabledLayers = true; }
+        SEaddQue(layerData.setupFunc);
+        SELayerBundle bundle = new SELayerBundle();
+        bundle.layer = layer;
+        bundle.layerData = layerData;
+        knownLayers.add(bundle);
+    }
+    
+    public static void SEremoveLayer(String layerName) {
+        int find = -1;
+        for (int a = 0; a < knownLayers.size(); a++) {
+            if (knownLayers.get(a).layerData.layerName.equals(layerName)) {
+                find = a;
+                break;
+            }
+        }
+        if (find == -1) { log(MSG_TYPE_INFO, MSG_UNKNOWN_LAYER); return; }
+        knownLayers.remove(find);
+    }
 
     /**
      * Gets a specific key's state on the keyboard.
@@ -445,35 +481,40 @@ public class SEEngine {
     
     private static boolean init(SEControlledProgram prog) {
         program = prog;
-        programData = prog.program();
-        if (programData.messageFunc != null) msgFuncExists = true;
+        programData = new SEProgramData(prog.program());
+        if (programData.functions.messageFunc != null) msgFuncExists = true;
         log(MSG_TYPE_INFO, MSG_INIT);
         if (!glfwInit()) { log(MSG_TYPE_FAIL_FATAL, MSG_GLFW_ERROR); return false; }
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 1);
         window = glfwCreateWindow(programData.windowWidth, programData.windowHeight, programData.programName, programData.isFullScreen ? glfwGetPrimaryMonitor() : NULL, NULL);
         if (window == NULL) { log(MSG_TYPE_FAIL_FATAL, MSG_WINDOW_ERROR); return false; }
         glfwMakeContextCurrent(window);
         glfwSetKeyCallback(window, (long windowM, int key, int scancode, int action, int mods)->{
-            if (action == GLFW_PRESS) keys[key] = true;
-            else if (action == GLFW_RELEASE) keys[key] = false;
-            programData.keyFunc.key(key, action);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.keyFunc.key(key, action);
+            programData.functions.keyFunc.key(key, action);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.keyFunc.key(key, action);
         });
         glfwSetCursorPosCallback(window, (long windowM, double x, double y) -> {
-            programData.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
-            for (SEObjects.SEButtonBundle bundle : SEObjects.buttons) {
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
+            programData.functions.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
+            for (SEObjects.SEButton bundle : SEObjects.buttons) {
                 if (SERLogic.isPointColliding((int)x, (int)y, bundle.x, bundle.y, bundle.w, bundle.h)) {
                     bundle.func.func(bundle, MOUSE_MOVE);
                     if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, MOUSE_ENTER);
-                    } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
-                }
+                    }
+                } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
             }
         });
         glfwSetMouseButtonCallback(window, (long windowM, int button, int action, int mods) -> {
             double[] x = new double[1], y = new double[1];
             glfwGetCursorPos(window, x, y);
-            programData.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
-            for (SEObjects.SEButtonBundle bundle : SEObjects.buttons)
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
+            programData.functions.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
+            for (SEObjects.SEButton bundle : SEObjects.buttons)
                 if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h)) bundle.func.func(bundle, action == GLFW_PRESS ? MOUSE_PRESS : MOUSE_RELEASE);
         });
         GL.createCapabilities();
@@ -488,27 +529,28 @@ public class SEEngine {
         if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_ERROR); return false; }
         if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(MSG_TYPE_FAIL_FATAL, MSG_INCOMPATIBLE_PROGRAM); return false; }
         SETextures.gpuMaxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
-        debug("Max texture size: " + SETextures.gpuMaxTextureSize);
         SEObjects.loadObjects(programData.maxObjects);
         SETextures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
         scWidth = programData.windowWidth; scHeight = programData.windowHeight;
-        glClearColor(programData.bkgColor[0], programData.bkgColor[1], programData.bkgColor[2], programData.bkgColor[3]);
-        for (SEqueFunc qf : quedFuncs) qf.func();
-        SEisRunning = true;
+        SEchangeBackgroundColor(programData.bkgColor);
+        for (SEInfoFunc qf : quedFuncs) qf.func();
+        isRunning = true;
         prog.setup();
         return true;
     }
+    
+    public static boolean SEisRunning() { return isRunning; }
     
     /**
      * Returns the current SEEngine version.
      * @return The current SEEngine version.
      */
-    public static String SEversion() { return "SEAlpha2a"; }
+    public static String SEversion() { return "SEAlpha3a"; }
     
     /**
      * Starts SEEngine.
      * This function will not return until the program passed has also finished running (through {@link engine.SEEngine#SEshouldQuit}) or the user closes the window.
-     * The active program can be switched using {@link engine.SEEngine#SEswitchPrograms(SEControlledProgram, boolean)}.
+     * The active program can be switched using {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)}.
      * @param prog The that will be running.
      */
     public static void SEstart(SEControlledProgram prog) {

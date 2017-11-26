@@ -1,5 +1,5 @@
 /*
- * SEEngine OpenGL 2.0 Engine
+ * SEEngine OpenGL 2.1 Engine
  * Copyright (C) 2017  desgroup
 
  * This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,78 @@ package engine;
 /**
  * Holds all constants the engine may use to communicate.
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha3a
  */
 public class SEConstants {
+    protected static class SEProgramBundle {
+        SEControlledProgram program;
+        SEProgramData programData;
+    }
+    protected static class SELayerBundle {
+        SEControlledLayer layer;
+        SELayerData layerData;
+    }
+    
+    public interface SEInfoFunc {
+        void func();
+    }
+    
+    /**
+     * A keyboard messaging interface for sending keyboard information to the application.
+     */
+    public interface SEKeyFunc {
+        /**
+         * Called when a key is pressed, released or any other GLFW key related event.
+         * @param key The key where the action applies to. One of the GLFW_KEY_ constants.
+         * @param action The action applying to the key. A GLFW_ constant.
+         */
+        void key(int key, int action);
+    }
+
+    /**
+     * A mouse messaging interface for sending mouse information to the application.
+     */
+    public interface SEMouseFunc {
+        /**
+         * Called when a mouse button is press, released, the mouse is moved or any other GLFW mouse/cursor related event.
+         * @param x X coordinate relative to the top left of the window of cursor at the time of the action.
+         * @param y Y coordinate relative to the top left of the window of cursor at the time of the action.
+         * @param button The mouse button where that action applies (if any). One of the GLFW_MOUSE_BUTTON_ constants.
+         * @param action The action applying to the mouse. One of the MOUSE_ constants.
+         */
+        void mouse(int x, int y, int button, int action);
+    }
+
+    /**
+     * A messaging interface for sending messages to the application.
+     */
+    public interface SEMessageFunc {
+        /**
+         * Called when the engine wishes to send a message to the application.
+         * @param type The type of the message. One of the MSG_ constants.
+         * @param msg The specific message sent to your computer.
+         */
+        void msg(byte type, int msg);
+    }
+    
+    public static class SEFunctionBundle {
+        public SEFunctionBundle(SEKeyFunc key, SEMouseFunc mouse, SEMessageFunc message) {
+            keyFunc = key; mouseFunc = mouse; messageFunc = message;
+        }
+        
+        public SEFunctionBundle(SEFunctionBundle copy) {
+            keyFunc = copy.keyFunc;
+            mouseFunc = copy.mouseFunc;
+            messageFunc = copy.messageFunc;
+        }
+        
+        public SEFunctionBundle() {}
+        
+        public SEKeyFunc keyFunc = (int key, int action) -> {};
+        public SEMouseFunc mouseFunc = (int x, int y, int button, int action) -> {};
+        public SEMessageFunc messageFunc = (byte type, int msg) -> {};
+    }
+    
     /**
      * A global offset bound to every {@link engine.SEWrappedObj} unless {@link engine.SEEngine#SEpreventBindOriginOffset} was enabled on the creation of the object.
      */
@@ -66,15 +135,15 @@ public class SEConstants {
     /**
      * Direction: Positive Y towards top.
      */
-    protected static final byte DIRECTION_BOTTOM_TO_TOP = 0x31;
+    public static final byte DIRECTION_BOTTOM_TO_TOP = 0x31;
     /**
      * Direction: Positive X towards right.
      */
-    protected static final byte DIRECTION_LEFT_TO_RIGHT = 0x32;
+    public static final byte DIRECTION_LEFT_TO_RIGHT = 0x32;
     /**
      * Direction: Positive X towards left.
      */
-    protected static final byte DIRECTION_RIGHT_TO_LEFT = 0x33;
+    public static final byte DIRECTION_RIGHT_TO_LEFT = 0x33;
     
     /**
     * Indicates a debug message.
@@ -83,35 +152,35 @@ public class SEConstants {
     /**
      * Indicates an informatic message.
      */
-    protected static final byte MSG_TYPE_INFO = 0x41;
+    public static final byte MSG_TYPE_INFO = 0x41;
     /**
      * Indicates a process requiring optimization.
      */
-    protected static final byte MSG_TYPE_OPT = 0x42;
+    public static final byte MSG_TYPE_OPT = 0x42;
     /**
      * Indicates a process requiring optimization that may screw with the functionality of your program.
      */
-    protected static final byte MSG_TYPE_OPT_FUNC = 0x43;
+    public static final byte MSG_TYPE_OPT_FUNC = 0x43;
     /**
      * Indicates a failure in either the engine or the program.
      */
-    protected static final byte MSG_TYPE_FAIL = 0x44;
+    public static final byte MSG_TYPE_FAIL = 0x44;
     /**
      * Indicates an incompatibility or complete failure in the engine that requires the engine to abort.
      */
-    protected static final byte MSG_TYPE_FAIL_FATAL = 0x45;
+    public static final byte MSG_TYPE_FAIL_FATAL = 0x45;
     /**
      * Indicates an error in OpenGL.
      */
-    protected static final byte MSG_TYPE_OPENGL = 0x46;
+    public static final byte MSG_TYPE_OPENGL = 0x46;
     /**
      * Indicates a message that contains something else.
      */
-    protected static final byte MSG_TYPE_OTHER = 0x47;
+    public static final byte MSG_TYPE_OTHER = 0x47;
         /**
          * Indicates a message delivered to the current program by an external interface.
          */
-    protected static final byte MSG_TYPE_EXTERNAL = 0x48;
+    public static final byte MSG_TYPE_EXTERNAL = 0x48;
     
     /**
      * Inherits nothing from the previous program.
@@ -120,11 +189,11 @@ public class SEConstants {
     /**
      * Inherits values that are higher or equal to the current program data.
      */
-    protected static final byte INHERIT_MINIMUM = 0x51;
+    public static final byte INHERIT_MINIMUM = 0x51;
     /**
      * Inherits everything possible.
      */
-    protected static final byte INHERIT_MOST = 0x52;
+    public static final byte INHERIT_MOST = 0x52;
     
     /**
      * A Mouse Action where a mouse have moved within the specified area.
@@ -133,19 +202,19 @@ public class SEConstants {
     /**
      * Mouse Action: A mouse button has been pressed down within the specified area.
      */
-    protected static final byte MOUSE_PRESS = 0x61;
+    public static final byte MOUSE_PRESS = 0x61;
     /**
      * Mouse Action: A mouse button has been let go the specified area.
      */
-    protected static final byte MOUSE_RELEASE = 0x62;
+    public static final byte MOUSE_RELEASE = 0x62;
     /**
      * Mouse Action: A mouse has entered the specified area.
      */
-    protected static final byte MOUSE_ENTER = 0x63;
+    public static final byte MOUSE_ENTER = 0x63;
     /**
      * Mouse Action: A mouse has exited the specified area.
      */
-    protected static final byte MOUSE_EXIT = 0x64;
+    public static final byte MOUSE_EXIT = 0x64;
     
     /**
      * There was a generic, unspecific and broad event.
@@ -271,4 +340,8 @@ public class SEConstants {
      * The current computer could not create the appropriate context to create your application.
      */
     public static final int MSG_INCOMPATIBLE_CONTEXT = 0x1b;
+    public static final int MSG_OPENAL_FEEDBACK_ERROR = 0x1c;
+    public static final int MSG_EXPERIMENTAL_SOUND_WARNING = 0x1d;
+    public static final int MSG_ADD_LAYER_WARNING = 0x1e;
+    public static final int MSG_UNKNOWN_LAYER = 0x1f;
 }
