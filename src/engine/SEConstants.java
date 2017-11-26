@@ -37,7 +37,7 @@ public class SEConstants {
     }
     
     /**
-     * A keyboard messaging interface for {@link engine.SEProgramData#keyFunc}.
+     * A keyboard messaging interface for sending keyboard information to the application.
      */
     public interface SEKeyFunc {
         /**
@@ -49,7 +49,7 @@ public class SEConstants {
     }
 
     /**
-     * A mouse messaging interface for {@link engine.SEProgramData#mouseFunc}.
+     * A mouse messaging interface for sending mouse information to the application.
      */
     public interface SEMouseFunc {
         /**
@@ -63,7 +63,7 @@ public class SEConstants {
     }
 
     /**
-     * A messaging interface for simple messages for {@link engine.SEProgramData#messageFunc}.
+     * A messaging interface for sending messages to the application.
      */
     public interface SEMessageFunc {
         /**

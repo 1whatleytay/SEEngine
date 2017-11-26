@@ -320,21 +320,22 @@ public class SEObjects {
      */
     public static void SEvisible(SEObj obj, boolean value) {
         obj.isHidden = value;
-        if (value) {
+        if (value) objSave(obj);
+        else {
             SEObj.blank.object = obj.object;
             objSave(SEObj.blank);
-        } else objSave(obj);
+        }
     }
     
     /**
-     * A function to run when an event occurs within an {@link engine.SEObjects.SEButtonBundle}.
-     * Passed to {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)} to create a {@link engine.SEObjects.SEButtonBundle}.
+     * A function to run when an event occurs within an {@link engine.SEObjects.SEButton}.
+     * Passed to {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)} to create a {@link engine.SEObjects.SEButton}.
      */
     public static interface SEButtonFunction {
         /**
          * This function will be called when a message is need to be sent to the respective SEButtonBundle.
-         * @param obj The {@link engine.SEObjects.SEButtonBundle} that originated the call.
-         * @param action The action that occurred within the {@link engine.SEObjects.SEButtonBundle}. One of the MOUSE_ constants.
+         * @param obj The {@link engine.SEObjects.SEButton} that originated the call.
+         * @param action The action that occurred within the {@link engine.SEObjects.SEButton}. One of the MOUSE_ constants.
          */
         void func(SEButton obj, byte action); }
 
@@ -369,12 +370,12 @@ public class SEObjects {
     }
     
     /**
-     * A list of every {@link engine.SEObjects.SEButtonBundle} that exists.
+     * A list of every {@link engine.SEObjects.SEButton} that exists.
      */
     protected static ArrayList<SEButton> buttons = new ArrayList<>();
     
     /**
-     * Creates a new {@link engine.SEObjects.SEButtonBundle} at x, y with a size of w width and h height and a message function of func.
+     * Creates a new {@link engine.SEObjects.SEButton} at x, y with a size of w width and h height and a message function of func.
      * @param x The x position (relative to the top of the window, in pixels) where the area starts.
      * @param y The x position (relative to the top of the window, in pixels) where the area starts.
      * @param w The width of the area.
@@ -392,7 +393,7 @@ public class SEObjects {
 
     /**
      * Object version of {@link engine.SEObjects#SEcreateButton(int, int, int, int, SEButtonFunction)}.
-     * @param obj The object to have it's properties carried to the {@link engine.SEObjects.SEButtonBundle}. A change to the object will not update the bundle.
+     * @param obj The object to have it's properties carried to the {@link engine.SEObjects.SEButton}. A change to the object will not update the bundle.
      * @param func The message function of the area. Will be called when one of the MOUSE_ constant occur.
      * @return A representation of the area. Changes made to the object will be reflected in the area.
      */

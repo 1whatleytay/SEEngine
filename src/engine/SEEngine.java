@@ -62,11 +62,11 @@ public class SEEngine {
      */
     public static boolean SEdoubleWrappedObjects = false;
     /**
-     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link enigne.SEWrappedObj}.
+     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link engine.SEWrappedObj}
      */
     public static boolean SEwrappedObjectDepth = false;
     /**
-     * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEProgram)} as soon as the program returns.
+     * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEControlledProgram)} as soon as the program returns.
      * Using this option to quit the window (almost) insures a safe termination of GLFW and other libraries.
      */
     public static boolean SEshouldQuit = false;
@@ -87,7 +87,7 @@ public class SEEngine {
      */
     public static boolean SEcalcFPS = false;
     /**
-     * Prevents binding {@link enigine.SEObjects#ORIGIN_OFFSET} to all {@link engine.SEWrappedObj} on creation.
+     * Prevents binding {@link engine.SEConstants#ORIGIN_OFFSET} to all {@link engine.SEWrappedObj} on creation.
      */
     public static boolean SEpreventBindOriginOffset = false;
     /**
@@ -104,7 +104,7 @@ public class SEEngine {
         vers.put("SEEarly0", 0); vers.put("SEEarly1", 1); vers.put("SEEarly2", 2);
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
         vers.put("SEAlpha1a", 6); vers.put("SEAlpha1b", 7); vers.put("SEAlpha1c", 8);
-        vers.put("SEAlpha2a", 9); vers.put("SEAlpha2b", 10);
+        vers.put("SEAlpha2a", 9); vers.put("SEAlpha2b", 10); vers.put("SEAlpha3a", 11);
         return vers;
     }
     private static final HashMap<String, Integer> VERSIONS = versions();
@@ -220,7 +220,7 @@ public class SEEngine {
     }
     
     /**
-     * If {@link engine.SEEngine#SEcoreDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
+     * If {@link engine.SEEngine#SEuseDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
      * The description of {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT} should be equal to msg at the time during a single threaded application.
      * @param msg A description of the debug message.
      */
@@ -250,12 +250,6 @@ public class SEEngine {
      * @return The current window height.
      */
     public static int SEgetWindowHeight() { return (int)scHeight; }
-    
-    /*String warnings = "";
-    
-    public static void SEwarn(String info) {
-        
-    }*/
     
     private static void close() {
         isRunning = false;
@@ -535,7 +529,6 @@ public class SEEngine {
         if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_ERROR); return false; }
         if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(MSG_TYPE_FAIL_FATAL, MSG_INCOMPATIBLE_PROGRAM); return false; }
         SETextures.gpuMaxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
-        debug("Max texture size: " + SETextures.gpuMaxTextureSize);
         SEObjects.loadObjects(programData.maxObjects);
         SETextures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
         scWidth = programData.windowWidth; scHeight = programData.windowHeight;
@@ -552,12 +545,12 @@ public class SEEngine {
      * Returns the current SEEngine version.
      * @return The current SEEngine version.
      */
-    public static String SEversion() { return "SEAlpha2b"; }
+    public static String SEversion() { return "SEAlpha3a"; }
     
     /**
      * Starts SEEngine.
      * This function will not return until the program passed has also finished running (through {@link engine.SEEngine#SEshouldQuit}) or the user closes the window.
-     * The active program can be switched using {@link engine.SEEngine#SEswitchPrograms(SEControlledProgram, boolean)}.
+     * The active program can be switched using {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)}.
      * @param prog The that will be running.
      */
     public static void SEstart(SEControlledProgram prog) {

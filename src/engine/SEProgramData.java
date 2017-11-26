@@ -97,13 +97,13 @@ public class SEProgramData {
     public boolean isFullScreen = false;
 
     /**
-     * Determines how much of the previous program is inherited in {@link engine.SEEngine#SEswitchPrograms(SEControlledProgram, boolean)} calls.
+     * Determines how much of the previous program is inherited in {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)} calls.
      * Should be one of the INHERIT_ constants.
      */
     public byte inheritData = INHERIT_NONE;
 
     /**
-     * If this value is true, a quick clear will be used for values that have been inherited or are the same during a {@link engine.SEEngine#SEswitchPrograms(SEControlledProgram, boolean)}.
+     * If this value is true, a quick clear will be used for values that have been inherited or are the same during a {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)}.
      * A quick clear only invalidates data instead of completely erasing it.
      */
     public boolean useQuickClear = false;

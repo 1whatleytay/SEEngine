@@ -28,7 +28,7 @@ import static engine.SEProgramData.*;
  * @author desgroup
  * @version SEAlpha2a
  */
-public class SEIShaders {
+class SEIShaders {
     private SEIShaders() {}
     
     private static final String[] SHADER_SOURCES = {
