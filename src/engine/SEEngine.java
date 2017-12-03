@@ -37,7 +37,7 @@ import static engine.SEConstants.*;
 /**
  * Handles starting the engine and controlling flow and features of the program(s).
  * @author desgroup
- * @version SEAlpha3a
+ * @version SEAlpha4a
  */
 public class SEEngine {
     
@@ -52,7 +52,7 @@ public class SEEngine {
      * Switches mode to use Wrapped Objects.
      * Allows matrix and offset transformations for many wrapped objects.
      */
-    public static boolean SEwrappedObjects = false;
+    public static boolean SEuseWrappedObjects = false;
     /**
      * Looks for OpenGL errors every frame and notifies your application with a MSG_OPENGL message.
      */
@@ -62,9 +62,9 @@ public class SEEngine {
      */
     public static boolean SEdoubleWrappedObjects = false;
     /**
-     * Allows {@link engine.SEObjects#SEdepth(SEWrappedObj, int)} to control the depth of a {@link engine.SEWrappedObj}
+     * Allows {@link engine.SEWrappedObj#depth(int)} to control the depth of a {@link engine.SEWrappedObj}.
      */
-    public static boolean SEwrappedObjectDepth = false;
+    public static boolean SEuseWrappedObjectDepth = false;
     /**
      * Once enabled, {@link engine.SEEngine} will return from {@link engine.SEEngine#SEstart(SEControlledProgram)} as soon as the program returns.
      * Using this option to quit the window (almost) insures a safe termination of GLFW and other libraries.
@@ -92,10 +92,17 @@ public class SEEngine {
     public static boolean SEpreventBindOriginOffset = false;
     /**
      * Prevents overwriting descriptions.
-     * Breaks {@link engine.SEEngine#logWithDescription(byte, int, String)} and descriptions that may be variable.
+     * Breaks {@link engine.SEEngine#logWithDescription(SEMessageType, SEMessage, java.lang.String)} and descriptions that may be variable.
      */
     public static boolean SEpreventDoubleDescriptions = false;
+    /**
+     * Allows layers to be added and executed.
+     */
     public static boolean SEuseLayers = false;
+    /**
+     * Allows {@link engine.SEEngine#SEsubmitFakePress(int, int)} to properly submit a key press to the application.
+     */
+    public static boolean SEuseFakeKeyPresses = false;
     
     private static boolean isRunning = false;
     
@@ -105,6 +112,7 @@ public class SEEngine {
         vers.put("SEEarly3", 3); vers.put("SEEarly4", 4); vers.put("SEAlpha0a", 5);
         vers.put("SEAlpha1a", 6); vers.put("SEAlpha1b", 7); vers.put("SEAlpha1c", 8);
         vers.put("SEAlpha2a", 9); vers.put("SEAlpha2b", 10); vers.put("SEAlpha3a", 11);
+        vers.put("SEAlpha3b", 12); vers.put("SEAlpha4a", 13);
         return vers;
     }
     private static final HashMap<String, Integer> VERSIONS = versions();
@@ -138,48 +146,50 @@ public class SEEngine {
      * @param type The type of the message being sent. Should be a MSG_ constant from {@link engine.SEProgramData}.
      * @param message A indicator of the specific message.
      */
-    public static void log(byte type, int message) {
+    public static void log(SEMessageType type, SEMessage message) {
         if (msgFuncExists) programData.functions.messageFunc.msg(type, message);
         engineLog += SEgetMessageDescription(message) + "\n"; 
     }
     
-    private static HashMap<Integer, String> messageDescriptions() {
-        HashMap<Integer, String> nMD = new HashMap<>();
-        nMD.put(MSG_GENERIC, "A generic placeholder message. Expected more?");
-        nMD.put(MSG_INIT, "--> SEEngine is initializing...");
-        nMD.put(MSG_LOOP, "--> SEEngine has entered the main program loop...");
-        nMD.put(MSG_EXIT, "--> SEEngine is closing...");
-        nMD.put(MSG_GLFW_ERROR, "GLFW failed to start.");
-        nMD.put(MSG_WINDOW_ERROR, "Could not create window!");
-        nMD.put(MSG_SHADERS_ERROR, "Could not load shaders!");
-        nMD.put(MSG_INCOMPATIBLE_PROGRAM, "Program claims to be incompatible with " + SEversion());
-        nMD.put(MSG_OPENGL_FEEDBACK_ERROR, "Generic OpenGL Error, I think...");
-        nMD.put(MSG_LOG_WITH_DESCRIPTION_WARNING, "Calling logWithDescription with SEpreventDoubleDescriptions can cause some unreliable mesages being sent.");
-        nMD.put(MSG_GET_FPS_WARNING, "A call to SEgetFPS() was made, but SEcalcFPS was disabled, and the FPS may not be accurate.");
-        nMD.put(MSG_DRAW_WARNING, "SEdraw was called even though the frame was going to be drawn anyway. Maybe you're looking for enabling SEdrawOnCommand?");
-        nMD.put(MSG_DEBUG_BINDING_POINT, "Generic Debug Message, I think...");
-        nMD.put(MSG_SHADERS_VERTEX_COMPILE_ERROR, "Generic Vertex Shader Compiler Issue, I think...");
-        nMD.put(MSG_SHADERS_FRAGMENT_COMPILE_ERROR, "Generic Fragment Shader Compiler Issue, I think...");
-        nMD.put(MSG_SHADERS_LINK_ERROR, "Generic Shader Link Issue, I think...");
-        nMD.put(MSG_UNBIND_OFFSET_WARNING, "An unbind attempt was made to remove an offset that wasn't bound to the objects.");
-        nMD.put(MSG_OUT_OF_OBJECT_MEMORY, "Out of object memory!");
-        nMD.put(MSG_EMPTY_WRAPPER_CREATED, "An empty wrapper was created.");
-        nMD.put(MSG_UNKNOWN_WRAPPED_OBJECT, "An unknown wrapped object was queried.");
-        nMD.put(MSG_ALREADY_WRAPPED, "Yikes! SEdoubleWrappedObjects was disabled and a object was wrapped twice!");
-        nMD.put(MSG_MISSING_DEPTH_INFO, "Yikes! SEwrappedObjectDepth was switched unexpectedly!");
-        nMD.put(MSG_MISSING_TEXTURE, "Generic Missing Texture, I think...");
-        nMD.put(MSG_TEXTURE_LOAD_ERROR, "A texture failed to load!");
-        nMD.put(MSG_INCOMPATIBLE_MATRICES, "Incompatible Matrices!");
-        nMD.put(MSG_NULL_TEXTURE, "An operation was passed a null texture!");
-        nMD.put(MSG_OUT_OF_TEXTURE_MEMORY, "Out of texture memory!");
-        nMD.put(MSG_INCOMPATIBLE_CONTEXT, "The current context cannot handle an operation!");
-        nMD.put(MSG_OPENAL_FEEDBACK_ERROR, "Generic OpenAL Error, I think...");
-        nMD.put(MSG_EXPERIMENTAL_SOUND_WARNING, "SESound is experimental. Please call loadSounds() again to complete sound setup.");
-        nMD.put(MSG_ADD_LAYER_WARNING, "A Layer is being added, but layers are currently disabled.");
+    private static HashMap<SEMessage, String> messageDescriptions() {
+        HashMap<SEMessage, String> nMD = new HashMap<>();
+        nMD.put(SEMessage.MSG_GENERIC, "A generic placeholder message. Expected more?");
+        nMD.put(SEMessage.MSG_INIT, "--> SEEngine is initializing...");
+        nMD.put(SEMessage.MSG_LOOP, "--> SEEngine has entered the main program loop...");
+        nMD.put(SEMessage.MSG_EXIT, "--> SEEngine is closing...");
+        nMD.put(SEMessage.MSG_GLFW_ERROR, "GLFW failed to start.");
+        nMD.put(SEMessage.MSG_WINDOW_ERROR, "Could not create window!");
+        nMD.put(SEMessage.MSG_SHADERS_ERROR, "Could not load shaders!");
+        nMD.put(SEMessage.MSG_INCOMPATIBLE_PROGRAM, "Program claims to be incompatible with " + SEversion());
+        nMD.put(SEMessage.MSG_OPENGL_FEEDBACK_ERROR, "Generic OpenGL Error, I think...");
+        nMD.put(SEMessage.MSG_LOG_WITH_DESCRIPTION_WARNING, "Calling logWithDescription with SEpreventDoubleDescriptions can cause some unreliable mesages being sent.");
+        nMD.put(SEMessage.MSG_GET_FPS_WARNING, "A call to SEgetFPS(SEMessage.) was made, but SEcalcFPS was disabled, and the FPS may not be accurate.");
+        nMD.put(SEMessage.MSG_DRAW_WARNING, "SEdraw was called even though the frame was going to be drawn anyway. Maybe you're looking for enabling SEdrawOnCommand?");
+        nMD.put(SEMessage.MSG_DEBUG_BINDING_POINT, "Generic Debug Message, I think...");
+        nMD.put(SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR, "Generic Vertex Shader Compiler Issue, I think...");
+        nMD.put(SEMessage.MSG_SHADERS_FRAGMENT_COMPILE_ERROR, "Generic Fragment Shader Compiler Issue, I think...");
+        nMD.put(SEMessage.MSG_SHADERS_LINK_ERROR, "Generic Shader Link Issue, I think...");
+        nMD.put(SEMessage.MSG_UNBIND_OFFSET_WARNING, "An unbind attempt was made to remove an offset that wasn't bound to the objects.");
+        nMD.put(SEMessage.MSG_OUT_OF_OBJECT_MEMORY, "Out of object memory!");
+        nMD.put(SEMessage.MSG_EMPTY_WRAPPER_CREATED, "An empty wrapper was created.");
+        nMD.put(SEMessage.MSG_UNKNOWN_WRAPPED_OBJECT, "An unknown wrapped object was queried.");
+        nMD.put(SEMessage.MSG_ALREADY_WRAPPED, "Yikes! SEdoubleWrappedObjects was disabled and a object was wrapped twice!");
+        nMD.put(SEMessage.MSG_MISSING_DEPTH_INFO, "Yikes! SEwrappedObjectDepth was switched unexpectedly!");
+        nMD.put(SEMessage.MSG_MISSING_TEXTURE, "Generic Missing Texture, I think...");
+        nMD.put(SEMessage.MSG_TEXTURE_LOAD_ERROR, "A texture failed to load!");
+        nMD.put(SEMessage.MSG_INCOMPATIBLE_MATRICES, "Incompatible Matrices!");
+        nMD.put(SEMessage.MSG_NULL_TEXTURE, "An operation was passed a null texture!");
+        nMD.put(SEMessage.MSG_OUT_OF_TEXTURE_MEMORY, "Out of texture memory!");
+        nMD.put(SEMessage.MSG_INCOMPATIBLE_CONTEXT, "The current context cannot handle an operation!");
+        nMD.put(SEMessage.MSG_OPENAL_FEEDBACK_ERROR, "Generic OpenAL Error, I think...");
+        nMD.put(SEMessage.MSG_EXPERIMENTAL_SOUND_WARNING, "SESound is experimental. Please call loadSounds() again to complete sound setup.");
+        nMD.put(SEMessage.MSG_ADD_LAYER_WARNING, "A Layer is being added, but layers are currently disabled.");
+        nMD.put(SEMessage.MSG_OFFSET_TOO_LARGE, "An offset was passed an array, but the array is more (or less) than two elements.");
+        nMD.put(SEMessage.MSG_FAKE_KEYS_DISABLED_WARNING, "A fake key request was submitted, but fake static keys are disbaled, so your application might not fully be aware of the fake key press.");
         return nMD;
     }
     
-    private static final HashMap<Integer, String> MESSAGE_DESCRIPTIONS = messageDescriptions();
+    private static final HashMap<SEMessage, String> MESSAGE_DESCRIPTIONS = messageDescriptions();
     
     /**
      * Adds a message description to message msg.
@@ -187,7 +197,7 @@ public class SEEngine {
      * @param description The description to add.
      * @return The passed msg variable.
      */
-    public static int SEaddMessageDescription(int msg, String description) {
+    public static SEMessage SEaddMessageDescription(SEMessage msg, String description) {
         if (!SEpreventDoubleDescriptions || MESSAGE_DESCRIPTIONS.get(msg) == null)
             MESSAGE_DESCRIPTIONS.put(msg, description);
         return msg;
@@ -198,7 +208,7 @@ public class SEEngine {
      * @param msg The message to query the description of.
      * @return The description of the message msg.
      */
-    public static String SEgetMessageDescription(int msg) { return MESSAGE_DESCRIPTIONS.get(msg); }
+    public static String SEgetMessageDescription(SEMessage msg) { return MESSAGE_DESCRIPTIONS.get(msg); }
     
     private static boolean hasWarnedLWDPrevented = false;
     
@@ -208,9 +218,9 @@ public class SEEngine {
      * @param bindingPoint The message to send.
      * @param msg The new description of the message.
      */
-    public static void logWithDescription(byte type, int bindingPoint, String msg) {
+    public static void logWithDescription(SEMessageType type, SEMessage bindingPoint, String msg) {
         if (hasWarnedLWDPrevented && SEpreventDoubleDescriptions) {
-            log(MSG_TYPE_OPT, MSG_LOG_WITH_DESCRIPTION_WARNING);
+            log(SEMessageType.MSG_TYPE_OPT, SEMessage.MSG_LOG_WITH_DESCRIPTION_WARNING);
             hasWarnedLWDPrevented = true;
         }
         String lastDesc = SEgetMessageDescription(bindingPoint);
@@ -220,11 +230,11 @@ public class SEEngine {
     }
     
     /**
-     * If {@link engine.SEEngine#SEuseDebug} is enabled, sends a message of type {@link engine.SEConstants#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT}.
-     * The description of {@link engine.SEConstants#MSG_DEBUG_BINDING_POINT} should be equal to msg at the time during a single threaded application.
+     * If {@link engine.SEEngine#SEuseDebug} is enabled, sends a message of type {@link engine.SEConstants.SEMessageType#MSG_TYPE_DEBUG} through binding point {@link engine.SEConstants.SEMessage#MSG_DEBUG_BINDING_POINT}.
+     * The description of {@link engine.SEConstants.SEMessage#MSG_DEBUG_BINDING_POINT} should be equal to msg at the time during a single threaded application.
      * @param msg A description of the debug message.
      */
-    public static void debug(String msg) { if (SEuseDebug) logWithDescription(MSG_TYPE_DEBUG, MSG_DEBUG_BINDING_POINT, msg); }
+    public static void debug(String msg) { if (SEuseDebug) logWithDescription(SEMessageType.MSG_TYPE_DEBUG, SEMessage.MSG_DEBUG_BINDING_POINT, msg); }
     
     private static long window = NULL;
     
@@ -253,7 +263,7 @@ public class SEEngine {
     
     private static void close() {
         isRunning = false;
-        log(MSG_TYPE_INFO, MSG_EXIT);
+        log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_EXIT);
         glfwDestroyWindow(window);
         glfwTerminate();
     }
@@ -262,33 +272,33 @@ public class SEEngine {
         if (wObj == null) return;
         SEIShaders.matrix(wObj.matrix);
         int[] totalOffset = new int[2];
-        for (String coffsetName : wObj.offsetNames) {
-            int[] coffset = SEObjects.offsets.get(coffsetName);
-            totalOffset[0] += coffset[0]; totalOffset[1] += coffset[1];
+        for (SEOffset coffset : wObj.offsets) {
+            int[] coffsetv = coffset.getOffset();
+            totalOffset[0] += coffsetv[0]; totalOffset[1] += coffsetv[1];
         }
         SEIShaders.offset(totalOffset[0], totalOffset[1]);
         int xCen = wObj.matrixCenterX; int yCen = wObj.matrixCenterY;
-        if (wObj.useObjectForMatrixCenter) { xCen = wObj.matrixCenter.centerX; yCen = wObj.matrixCenter.centerY; }
+        if (wObj.useObjectForMatrixCenter) { xCen = wObj.matrixCenter.getCenterX(); yCen = wObj.matrixCenter.getCenterY(); }
         SEIShaders.matrix_center(xCen, yCen);
         glMultiDrawArrays(GL_QUADS, wObj.drawRangesStart, wObj.drawRangesCount);
     }
      
     private static void render() {
-        if (SEwrappedObjects) {
-            if (SEwrappedObjectDepth) {
-                int head = SEObjects.first[0];
-                for (int a = 0; a < SEObjects.knownObjects.size(); a++) {
+        if (SEuseWrappedObjects) {
+            if (SEuseWrappedObjectDepth) {
+                int head = SEWrappedObj.first[0];
+                for (int a = 0; a < SEWrappedObj.knownObjects.size(); a++) {
                     if (head == -1) break;
-                    drawWrappedObject(SEObjects.knownObjects.get(head));
-                    head = SEObjects.next.get(head);
+                    drawWrappedObject(SEWrappedObj.knownObjects.get(head));
+                    head = SEWrappedObj.next.get(head);
                 }
             }
-            else for (SEWrappedObj wObj : SEObjects.knownObjects) drawWrappedObject(wObj);
+            else for (SEWrappedObj wObj : SEWrappedObj.knownObjects) drawWrappedObject(wObj);
         } else {
             glUseProgram(SEIShaders.shaderProgram);
-            glBindBuffer(GL_ARRAY_BUFFER, SEObjects.mainBuffer);
-            SEObjects.fixOffsets();
-            glDrawArrays(GL_QUADS, 0, 4 * SEObjects.objectDrawSpace);
+            glBindBuffer(GL_ARRAY_BUFFER, SEObj.mainBuffer);
+            ORIGIN_OFFSET.fix();
+            glDrawArrays(GL_QUADS, 0, 4 * SEObj.objectDrawSpace);
         }
     }
     
@@ -300,7 +310,7 @@ public class SEEngine {
      */
     public static void SEdraw() {
         if (!hasWarnedSEdrawOnCommand && !SEdrawOnCommand) {
-            log(MSG_TYPE_OPT, MSG_DRAW_WARNING);
+            log(SEMessageType.MSG_TYPE_OPT, SEMessage.MSG_DRAW_WARNING);
             hasWarnedSEdrawOnCommand = true;
         }
         glClear(GL_COLOR_BUFFER_BIT);
@@ -322,14 +332,14 @@ public class SEEngine {
      */
     public static int SEgetFPS() {
         if (!hasWarnedSEcalcFPS && !SEcalcFPS) {
-            log(MSG_TYPE_OPT, MSG_GET_FPS_WARNING);
+            log(SEMessageType.MSG_TYPE_OPT, SEMessage.MSG_GET_FPS_WARNING);
             hasWarnedSEcalcFPS = true;
         }
         return majorfps;
     }
     
     private static void loop() {
-        log(MSG_TYPE_INFO, MSG_LOOP);
+        log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_LOOP);
         while (!glfwWindowShouldClose(window) && !SEshouldQuit) {
             if (SEcalcFPS) {
                 minorfps++;
@@ -348,14 +358,14 @@ public class SEEngine {
             }
             if (SEcatchOpenGLErrors) {
                 int error = glGetError();
-                if (error != GL_NO_ERROR) logWithDescription(MSG_TYPE_OPENGL, MSG_OPENGL_FEEDBACK_ERROR, "New OpenGL error: " + error);
+                if (error != GL_NO_ERROR) logWithDescription(SEMessageType.MSG_TYPE_OPENGL, SEMessage.MSG_OPENGL_FEEDBACK_ERROR, "New OpenGL error: " + error);
             }
             glfwPollEvents();
         }
     }
     
-    private static boolean shouldInherit(byte inh, int oldVal, int newVal) {
-        return (inh >= INHERIT_MOST || (inh == INHERIT_MINIMUM && oldVal >= newVal));
+    private static boolean shouldInherit(SEInheritMode inh, int oldVal, int newVal) {
+        return (inh.ordinal() >= SEInheritMode.INHERIT_MOST.ordinal() || (inh.ordinal() == SEInheritMode.INHERIT_MINIMUM.ordinal() && oldVal >= newVal));
     }
     
     private static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
@@ -364,21 +374,21 @@ public class SEEngine {
         SEProgramData newProgramData = newProgram.program();
         if (doChanges) {
             glfwSetWindowTitle(window, newProgramData.programName);
-            if (oldProgramData.isFullScreen != newProgramData.isFullScreen && newProgramData.inheritData <= INHERIT_NONE);
-            if ((oldProgramData.windowWidth != newProgramData.windowWidth || oldProgramData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData <= INHERIT_NONE) {
+            if (oldProgramData.isFullScreen != newProgramData.isFullScreen && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal());
+            if ((oldProgramData.windowWidth != newProgramData.windowWidth || oldProgramData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal()) {
                 glfwSetWindowSize(window, newProgramData.windowWidth, newProgramData.windowHeight);
                 scWidth = newProgramData.windowWidth; scHeight = newProgramData.windowHeight;
             }
             SERImages.components = newProgramData.textureComponents;
             if (oldProgramData.textureComponents != newProgramData.textureComponents) {
-                if (SERImages.components == 1) SEIShaders.fragComponentMode = FRAG_MODE_GREYSCALE;
+                if (SERImages.components == 1) SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
                 else if (SERImages.components == 4) {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 }
                 else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
-                    SERImages.components = 4; SEIShaders.fragComponentMode = FRAG_MODE_ROUND_ALPHA; }
-                if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL, MSG_SHADERS_ERROR); return null; }
+                    SERImages.components = 4; SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA; }
+                if (!SEIShaders.loadProgram()) { log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_SHADERS_ERROR); return null; }
             }
             SERImages.components = (byte)Math.min(newProgramData.textureComponents, 4);
             if (
@@ -387,9 +397,14 @@ public class SEEngine {
                     shouldInherit(
                             newProgramData.inheritData,
                             oldProgramData.maxObjects,
-                            newProgramData.maxObjects)))
-                SEObjects.quickClearObjects();
-            else SEObjects.clearObjects(shouldInherit(newProgramData.inheritData, oldProgramData.maxObjects, newProgramData.maxObjects) ? oldProgramData.maxObjects : newProgramData.maxObjects);
+                            newProgramData.maxObjects))) {
+                SEObj.quickClearObjects();
+                SEWrappedObj.SEclearWrappedObjects();
+            }
+            else {
+                SEObj.clearObjects(shouldInherit(newProgramData.inheritData, oldProgramData.maxObjects, newProgramData.maxObjects) ? oldProgramData.maxObjects : newProgramData.maxObjects);
+                SEWrappedObj.SEclearWrappedObjects();
+            }
             if (newProgramData.useQuickClear && ((
                     oldProgramData.texMemoryWidth == newProgramData.texMemoryWidth &&
                     oldProgramData.texMemoryHeight == newProgramData.texMemoryHeight &&
@@ -397,14 +412,14 @@ public class SEEngine {
                     shouldInherit(newProgramData.inheritData, oldProgramData.texMemoryWidth, newProgramData.texMemoryWidth) &&
                     shouldInherit(newProgramData.inheritData, oldProgramData.texMemoryHeight, newProgramData.texMemoryHeight) &&
                     shouldInherit(newProgramData.inheritData, oldProgramData.textureComponents, newProgramData.textureComponents)))
-                SETextures.quickClearTextures();
+                SETex.quickClearTextures();
             else {
-                SETextures.clearTextures(newProgramData.texMemoryWidth, newProgramData.texMemoryHeight);
+                SETex.clearTextures(newProgramData.texMemoryWidth, newProgramData.texMemoryHeight);
             }
             glClearColor(newProgramData.bkgColor[0], newProgramData.bkgColor[1], newProgramData.bkgColor[2], newProgramData.bkgColor[3]);
             msgFuncExists = newProgramData.functions.messageFunc != null;
         }
-        if (!isCompatible(newProgramData.compatibleVersions)) { log(MSG_TYPE_FAIL, MSG_INCOMPATIBLE_PROGRAM); return oldProgram; }
+        if (!isCompatible(newProgramData.compatibleVersions)) { log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_INCOMPATIBLE_PROGRAM); return oldProgram; }
         program = newProgram;
         programData = new SEProgramData(newProgramData);
         if (doSetup) newProgram.setup();
@@ -421,7 +436,13 @@ public class SEEngine {
     public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup) {
         return SEswapPrograms(newProgram, doSetup, true);
     }
-    
+
+    /**
+     * Simple version of {@link engine.SEEngine#SEswapPrograms(SEControlledProgram)}.
+     * doSetup is assumed to be true.
+     * @param newProgram The program to replace the old one.
+     * @return The last program that was running.
+     */
     public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram) {
         return SEswapPrograms(newProgram, true);
     }
@@ -448,17 +469,25 @@ public class SEEngine {
     private static boolean hasWarnedDisabledLayers = false;
     
     private static ArrayList<SELayerBundle> knownLayers = new ArrayList<>();
-    
+
+    /**
+     * Adds the layer layer to the application.
+     * @param layer The layer to add.
+     */
     public static void SEaddLayer(SEControlledLayer layer) {
         SELayerData layerData = layer.layer();
-        if (!SEuseLayers && !hasWarnedDisabledLayers) { log(MSG_TYPE_INFO, MSG_ADD_LAYER_WARNING); hasWarnedDisabledLayers = true; }
+        if (!SEuseLayers && !hasWarnedDisabledLayers) { log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_ADD_LAYER_WARNING); hasWarnedDisabledLayers = true; }
         SEaddQue(layerData.setupFunc);
         SELayerBundle bundle = new SELayerBundle();
         bundle.layer = layer;
         bundle.layerData = layerData;
         knownLayers.add(bundle);
     }
-    
+
+    /**
+     * Removes a layer (by layer name) from the application.
+     * @param layerName The layer to remove.
+     */
     public static void SEremoveLayer(String layerName) {
         int find = -1;
         for (int a = 0; a < knownLayers.size(); a++) {
@@ -467,9 +496,11 @@ public class SEEngine {
                 break;
             }
         }
-        if (find == -1) { log(MSG_TYPE_INFO, MSG_UNKNOWN_LAYER); return; }
+        if (find == -1) { log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_UNKNOWN_LAYER); return; }
         knownLayers.remove(find);
     }
+
+    private static HashMap<Integer, Boolean> fakeKeyPresses = new HashMap<>();
 
     /**
      * Gets a specific key's state on the keyboard.
@@ -477,19 +508,44 @@ public class SEEngine {
      * @param key The key being queried. One of the many GLFW_KEY_ constants.
      * @return Returns either true if the key is being pressed and false otherwise.
      */
-    public static boolean SEgetKeyPosition(int key) { return glfwGetKey(window, key) == GLFW_PRESS; }
+    public static boolean SEisKeyPressed(int key) {
+        boolean result = glfwGetKey(window, key) == GLFW_PRESS;
+        if (SEuseFakeKeyPresses) {
+            Boolean fake = fakeKeyPresses.get(key);
+            if (fake == true) {
+                result = fake;
+            }
+        }
+        return result;
+    }
+
+    private static boolean hasWarnedFakePress = false;
+
+    /**
+     * Submits a fake key press to the application (and layers) for testing purposes.
+     * @param key The key to press.
+     * @param action The action to perform the the key.
+     */
+    public static void SEsubmitFakePress(int key, int action) {
+        if (!SEuseFakeKeyPresses && !hasWarnedFakePress) { log(SEMessageType.MSG_TYPE_OPT_FUNC, SEMessage.MSG_FAKE_KEYS_DISABLED_WARNING); hasWarnedFakePress = true; }
+        if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.keyFunc.key(key, action);
+        programData.functions.keyFunc.key(key, action);
+        if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.keyFunc.key(key, action);
+        if (action == GLFW_PRESS) fakeKeyPresses.put(key, true);
+        else fakeKeyPresses.put(key, false);
+    }
     
     private static boolean init(SEControlledProgram prog) {
         program = prog;
         programData = new SEProgramData(prog.program());
         if (programData.functions.messageFunc != null) msgFuncExists = true;
-        log(MSG_TYPE_INFO, MSG_INIT);
-        if (!glfwInit()) { log(MSG_TYPE_FAIL_FATAL, MSG_GLFW_ERROR); return false; }
+        log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_INIT);
+        if (!glfwInit()) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_GLFW_ERROR); return false; }
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 1);
         window = glfwCreateWindow(programData.windowWidth, programData.windowHeight, programData.programName, programData.isFullScreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-        if (window == NULL) { log(MSG_TYPE_FAIL_FATAL, MSG_WINDOW_ERROR); return false; }
+        if (window == NULL) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_WINDOW_ERROR); return false; }
         glfwMakeContextCurrent(window);
         glfwSetKeyCallback(window, (long windowM, int key, int scancode, int action, int mods)->{
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.keyFunc.key(key, action);
@@ -497,40 +553,44 @@ public class SEEngine {
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.keyFunc.key(key, action);
         });
         glfwSetCursorPosCallback(window, (long windowM, double x, double y) -> {
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
-            programData.functions.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x, (int)y, 0, MOUSE_MOVE);
-            for (SEObjects.SEButton bundle : SEObjects.buttons) {
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            programData.functions.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            for (SEButton bundle : SEButton.buttons) {
                 if (SERLogic.isPointColliding((int)x, (int)y, bundle.x, bundle.y, bundle.w, bundle.h)) {
-                    bundle.func.func(bundle, MOUSE_MOVE);
-                    if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, MOUSE_ENTER);
+                    bundle.func.func(bundle, SEMouseAction.MOUSE_MOVE);
+                    if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, SEMouseAction.MOUSE_ENTER);
                     }
-                } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, MOUSE_EXIT); }
+                } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, SEMouseAction.MOUSE_EXIT); }
             }
         });
         glfwSetMouseButtonCallback(window, (long windowM, int button, int action, int mods) -> {
+            SEMouseAction ma = SEMouseAction.MOUSE_EXIT;
+            switch (action) {
+                case GLFW_PRESS: ma = SEMouseAction.MOUSE_PRESS;
+                case GLFW_RELEASE: ma = SEMouseAction.MOUSE_RELEASE;
+            }
             double[] x = new double[1], y = new double[1];
             glfwGetCursorPos(window, x, y);
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
-            programData.functions.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, action);
-            for (SEObjects.SEButton bundle : SEObjects.buttons)
-                if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h)) bundle.func.func(bundle, action == GLFW_PRESS ? MOUSE_PRESS : MOUSE_RELEASE);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
+            programData.functions.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
+            for (SEButton bundle : SEButton.buttons)
+                if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h)) bundle.func.func(bundle, action == GLFW_PRESS ? SEMouseAction.MOUSE_PRESS : SEMouseAction.MOUSE_RELEASE);
         });
         GL.createCapabilities();
         SERImages.components = programData.textureComponents;
-        if (SERImages.components == 1) SEIShaders.fragComponentMode = FRAG_MODE_GREYSCALE;
+        if (SERImages.components == 1) SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
         else if (SERImages.components == 4) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
-            SERImages.components = 4; SEIShaders.fragComponentMode = FRAG_MODE_ROUND_ALPHA; }
-        if (!SEIShaders.loadProgram()) { log(MSG_TYPE_FAIL_FATAL, MSG_SHADERS_ERROR); return false; }
-        if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(MSG_TYPE_FAIL_FATAL, MSG_INCOMPATIBLE_PROGRAM); return false; }
-        SETextures.gpuMaxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
-        SEObjects.loadObjects(programData.maxObjects);
-        SETextures.loadTextures(programData.texMemoryWidth, programData.texMemoryHeight);
+            SERImages.components = 4; SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA; }
+        if (!SEIShaders.loadProgram()) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_ERROR); return false; }
+        if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_INCOMPATIBLE_PROGRAM); return false; }
+        SEObj.init(programData.maxObjects);
+        SETex.init(programData.texMemoryWidth, programData.texMemoryHeight);
         scWidth = programData.windowWidth; scHeight = programData.windowHeight;
         SEchangeBackgroundColor(programData.bkgColor);
         for (SEInfoFunc qf : quedFuncs) qf.func();
@@ -538,14 +598,18 @@ public class SEEngine {
         prog.setup();
         return true;
     }
-    
+
+    /**
+     * Tells if the program is running right now.
+     * @return True if a program is currently in execution (SEEngine has control over the thread) and false otherwise.
+     */
     public static boolean SEisRunning() { return isRunning; }
     
     /**
      * Returns the current SEEngine version.
      * @return The current SEEngine version.
      */
-    public static String SEversion() { return "SEAlpha3a"; }
+    public static String SEversion() { return "SEAlpha4a"; }
     
     /**
      * Starts SEEngine.

@@ -30,7 +30,7 @@ import static engine.SEConstants.*;
 /**
  * Handles loading images among other image related things.
  * @author desgroup
- * @version SEAlpha2a
+ * @version SEAlpha4a
  */
 public class SERImages {
     private SERImages() {}
@@ -58,7 +58,7 @@ public class SERImages {
     /**
      * Component mode for local functions.
      */
-    public static byte components = 4;
+    protected static byte components = 4;
 
     /**
      * Array of OpenGL component modes upon different values of {@link engine.SERImages#components}.
@@ -103,8 +103,8 @@ public class SERImages {
                     }
                 }
             } catch (Exception ex) {}
-        } else { SEEngine.logWithDescription(MSG_TYPE_OPT_FUNC, MSG_MISSING_TEXTURE, "Texture " + path + " does not exist!"); return null; }
-        if (glTexture == null) { SEEngine.log(MSG_TYPE_FAIL, MSG_TEXTURE_LOAD_ERROR); return null; }
+        } else { SEEngine.logWithDescription(SEMessageType.MSG_TYPE_OPT_FUNC, SEMessage.MSG_MISSING_TEXTURE, "Texture " + path + " does not exist!"); return null; }
+        if (glTexture == null) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_TEXTURE_LOAD_ERROR); return null; }
         return new Data(glTexture, width, height);
     }
 
@@ -114,7 +114,7 @@ public class SERImages {
      * @param texture The OpenGL texture to add data to.
      */
     public static void loadTexture(Data data, int texture) {
-        if (data == null) { SEEngine.log(MSG_TYPE_FAIL, MSG_TEXTURE_LOAD_ERROR); return; }
+        if (data == null) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_TEXTURE_LOAD_ERROR); return; }
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, COMPONENT_REFERENCE[components], data.width, data.height, 0, COMPONENT_REFERENCE[components], GL_FLOAT, data.data);
         setupTexture();
