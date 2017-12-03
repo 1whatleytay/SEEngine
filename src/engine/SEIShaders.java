@@ -111,7 +111,7 @@ class SEIShaders {
         int vShader = glCreateShader(GL_VERTEX_SHADER);
         int fShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(vShader, SHADER_SOURCES[0]);
-        glShaderSource(fShader, SHADER_SOURCES[fragComponentMode.ordinal()]);
+        glShaderSource(fShader, SHADER_SOURCES[fragComponentMode.ordinal() + 1]);
         glCompileShader(vShader);
         if (glGetShaderi(vShader, GL_COMPILE_STATUS) != GL_TRUE) {
             SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR, "Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
