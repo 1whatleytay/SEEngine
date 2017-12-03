@@ -59,20 +59,20 @@ public class SEProgramData {
 
     /**
      * Maximum amount of unique {@link engine.SEObj} that can exist at one time during the program's lifetime.
-     * A call to {@link engine.SEObjects#SEcreateObject(int, int, int, int, SETex)} with all objects created will fail.
+     * A call to {@link engine.SEObj#SEObj(int, int, int, int, SETex)} with all objects created will fail.
      */
     public int maxObjects = 512;
     
     /**
     * Maximum Texture Memory Width.
     * This major texture is used to store every single loaded {@link engine.SETex} object.
-    * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
+    * A call to {@link engine.SETex#SETex(SERLogic.Data)} with no fitting space will fail.
     */
     public int texMemoryWidth = 1024;
     /**
      * Maximum Texture Memory Height.
      * This major texture is used to store every single loaded {@link engine.SETex} object.
-     * A call to {@link engine.SETextures#SEloadTexture(SERLogic.Data)} with no fitting space will fail.
+     * A call to {@link engine.SETex#SETex(SERLogic.Data)} with no fitting space will fail.
      */
     public int texMemoryHeight = 1024;
 
@@ -100,7 +100,7 @@ public class SEProgramData {
      * Determines how much of the previous program is inherited in {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)} calls.
      * Should be one of the INHERIT_ constants.
      */
-    public byte inheritData = INHERIT_NONE;
+    public SEInheritMode inheritData = SEInheritMode.INHERIT_NONE;
 
     /**
      * If this value is true, a quick clear will be used for values that have been inherited or are the same during a {@link engine.SEEngine#SEswapPrograms(SEControlledProgram, boolean)}.
@@ -113,28 +113,7 @@ public class SEProgramData {
      * The first component is red, follow by green, blue and alpha.
      */
     public float[] bkgColor = {0, 0, 0, 1};
-    
-    /**
-     * Returns the name of the message type.
-     * @param msgType The message type. One of the MSG_ constants.
-     * @return A string describing the MSG_ constant.
-     */
-    public static String SEmsgDesc(byte msgType) {
-        String desc = "MSG_NO_DESC";
-        switch (msgType) {
-            case MSG_TYPE_DEBUG: desc = "MSG_DEBUG"; break;
-            case MSG_TYPE_INFO: desc = "MSG_INFO"; break;
-            case MSG_TYPE_OPT: desc = "MSG_OPT"; break;
-            case MSG_TYPE_OPT_FUNC: desc = "MSG_OPT_FUNC"; break;
-            case MSG_TYPE_FAIL: desc = "MSG_FAIL"; break;
-            case MSG_TYPE_FAIL_FATAL: desc = "MSG_FAIL_FATAL"; break;
-            case MSG_TYPE_OPENGL: desc = "MSG_OPENGL"; break;
-            case MSG_TYPE_OTHER: desc = "MSG_OTHER"; break;
-            case MSG_TYPE_EXTERNAL: desc = "MSG_EXTERNAL"; break;
-        }
-        return desc;
-    }
-    
+
     /**
      * Your program's supplied response functions.
      */

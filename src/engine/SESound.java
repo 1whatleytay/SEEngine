@@ -36,16 +36,16 @@ public class SESound {
     private static boolean experimentalSoundWarning = false;
     public static void loadSounds() {
         if (!experimentalSoundWarning) {
-            SEEngine.log(MSG_TYPE_INFO, MSG_EXPERIMENTAL_SOUND_WARNING);
+            SEEngine.log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_EXPERIMENTAL_SOUND_WARNING);
             experimentalSoundWarning = false;
             return;
         }
         device = alcOpenDevice((CharSequence)null);
         int error;
         error = alGetError();
-        if (error != AL_NO_ERROR) SEEngine.logWithDescription(MSG_TYPE_FAIL, MSG_OPENAL_FEEDBACK_ERROR, "OpenAL failed to create device! Error: " + error);
+        if (error != AL_NO_ERROR) SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_OPENAL_FEEDBACK_ERROR, "OpenAL failed to create device! Error: " + error);
         mainBuffer = alGenBuffers();
         error = alGetError();
-        if (error != AL_NO_ERROR) SEEngine.logWithDescription(MSG_TYPE_FAIL, MSG_OPENAL_FEEDBACK_ERROR, "OpenAL failed to create main buffer! Error: " + error);
+        if (error != AL_NO_ERROR) SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_OPENAL_FEEDBACK_ERROR, "OpenAL failed to create main buffer! Error: " + error);
     }
 }

@@ -20,22 +20,49 @@ package engine;
 /**
  * Holds all constants the engine may use to communicate.
  * @author desgroup
- * @version SEAlpha3a
+ * @version SEAlpha4a
  */
 public class SEConstants {
+
+    /**
+     * A bundle of a program and its data.
+     */
     protected static class SEProgramBundle {
         SEControlledProgram program;
         SEProgramData programData;
     }
+
+    /**
+     * A bundle of a layer and its data.
+     */
     protected static class SELayerBundle {
         SEControlledLayer layer;
         SELayerData layerData;
     }
-    
+
+    /**
+     * A function to run when an event occurs within an {@link engine.SEButton}.
+     * Passed to {@link engine.SEButton#SEButton(int, int, int, int, SEButtonFunc)} to create a {@link engine.SEButton}.
+     */
+    public interface SEButtonFunc {
+        /**
+         * This function will be called when a message is need to be sent to the respective SEButtonBundle.
+         * @param obj The {@link engine.SEButton} that originated the call.
+         * @param action The action that occurred within the {@link engine.SEButton}. One of the MOUSE_ constants.
+         */
+        void func(SEButton obj, SEMouseAction action);
+    }
+
+    /**
+     * A simple, no return, no param function for queues among other things.
+     */
     public interface SEInfoFunc {
+        /**
+         * A simple void, no param function.
+         */
         void func();
     }
-    
+
     /**
      * A keyboard messaging interface for sending keyboard information to the application.
      */
@@ -59,7 +86,7 @@ public class SEConstants {
          * @param button The mouse button where that action applies (if any). One of the GLFW_MOUSE_BUTTON_ constants.
          * @param action The action applying to the mouse. One of the MOUSE_ constants.
          */
-        void mouse(int x, int y, int button, int action);
+        void mouse(int x, int y, int button, SEMouseAction action);
     }
 
     /**
@@ -71,31 +98,58 @@ public class SEConstants {
          * @param type The type of the message. One of the MSG_ constants.
          * @param msg The specific message sent to your computer.
          */
-        void msg(byte type, int msg);
+        void msg(SEMessageType type, SEMessage msg);
     }
-    
+
+    /**
+     * A bundle of functions containing key, mouse and message callbacks.
+     */
     public static class SEFunctionBundle {
+        /**
+         * Constructor.
+         * @param key The key callback function.
+         * @param mouse The mouse callback function.
+         * @param message The message callback function.
+         */
         public SEFunctionBundle(SEKeyFunc key, SEMouseFunc mouse, SEMessageFunc message) {
             keyFunc = key; mouseFunc = mouse; messageFunc = message;
         }
-        
+
+        /**
+         * Copy constructor.
+         * @param copy The class to copy.
+         */
         public SEFunctionBundle(SEFunctionBundle copy) {
             keyFunc = copy.keyFunc;
             mouseFunc = copy.mouseFunc;
             messageFunc = copy.messageFunc;
         }
-        
+
+        /**
+         * Void constructor.
+         */
         public SEFunctionBundle() {}
-        
+
+        /**
+         * The key callback.
+         */
         public SEKeyFunc keyFunc = (int key, int action) -> {};
-        public SEMouseFunc mouseFunc = (int x, int y, int button, int action) -> {};
-        public SEMessageFunc messageFunc = (byte type, int msg) -> {};
+
+        /**
+         * The mouse callback.
+         */
+        public SEMouseFunc mouseFunc = (int x, int y, int button, SEMouseAction action) -> {};
+
+        /**
+         * The message callback.
+         */
+        public SEMessageFunc messageFunc = (SEMessageType type, SEMessage msg) -> {};
     }
     
     /**
      * A global offset bound to every {@link engine.SEWrappedObj} unless {@link engine.SEEngine#SEpreventBindOriginOffset} was enabled on the creation of the object.
      */
-    public static final String ORIGIN_OFFSET = "offset1";
+    public static final SEOffset ORIGIN_OFFSET = new SEOffset(0, 0);
     
     /**
      * Makes the program compatible with every version of SEEngine.
@@ -114,234 +168,288 @@ public class SEConstants {
      * Used with: {@link engine.SEProgramData#textureComponents}.
      */
     public static final byte FOURTH_COMPONENT_AS_DISCARD = 0x10;
-    
+
     /**
-     * Shader: Basic pass through.
+     * Different fragment modes for SEEngine.
      */
-    protected static final byte FRAG_MODE_NORMAL = 0x20;
+    protected enum SEFragMode {
+        /**
+         * Shader: Basic pass through.
+         */
+        FRAG_MODE_NORMAL,
+        /**
+         * Shader: Discards fragments with &lt;0.5 alpha.
+         */
+        FRAG_MODE_ROUND_ALPHA,
+        /**
+         * Shader: Red to all components.
+         */
+        FRAG_MODE_GREYSCALE
+    }
+
     /**
-     * Shader: Discards fragments with &lt;0.5 alpha.
+     * Different directions for {@link engine.SEObj#SEdirection(SEDirection)}.
      */
-    protected static final byte FRAG_MODE_ROUND_ALPHA = 0x21;
+    public enum SEDirection {
+        /**
+         * Direction: Positive Y towards bottom.
+         */
+        DIRECTION_TOP_TO_BOTTOM,
+        /**
+         * Direction: Positive Y towards top.
+         */
+        DIRECTION_BOTTOM_TO_TOP,
+        /**
+         * Direction: Positive X towards right.
+         */
+        DIRECTION_LEFT_TO_RIGHT,
+        /**
+         * Direction: Positive X towards left.
+         */
+        DIRECTION_RIGHT_TO_LEFT
+    }
+
     /**
-     * Shader: Red to all components.
+     * All message types for the message callback.
      */
-    protected static final byte FRAG_MODE_GREYSCALE = 0x22;
-    
-    /**
-    * Direction: Positive Y towards bottom.
-    */
-    public static final byte DIRECTION_TOP_TO_BOTTOM = 0x30;
-    /**
-     * Direction: Positive Y towards top.
-     */
-    public static final byte DIRECTION_BOTTOM_TO_TOP = 0x31;
-    /**
-     * Direction: Positive X towards right.
-     */
-    public static final byte DIRECTION_LEFT_TO_RIGHT = 0x32;
-    /**
-     * Direction: Positive X towards left.
-     */
-    public static final byte DIRECTION_RIGHT_TO_LEFT = 0x33;
-    
-    /**
-    * Indicates a debug message.
-    */
-    public static final byte MSG_TYPE_DEBUG = 0x40;
-    /**
-     * Indicates an informatic message.
-     */
-    public static final byte MSG_TYPE_INFO = 0x41;
-    /**
-     * Indicates a process requiring optimization.
-     */
-    public static final byte MSG_TYPE_OPT = 0x42;
-    /**
-     * Indicates a process requiring optimization that may screw with the functionality of your program.
-     */
-    public static final byte MSG_TYPE_OPT_FUNC = 0x43;
-    /**
-     * Indicates a failure in either the engine or the program.
-     */
-    public static final byte MSG_TYPE_FAIL = 0x44;
-    /**
-     * Indicates an incompatibility or complete failure in the engine that requires the engine to abort.
-     */
-    public static final byte MSG_TYPE_FAIL_FATAL = 0x45;
-    /**
-     * Indicates an error in OpenGL.
-     */
-    public static final byte MSG_TYPE_OPENGL = 0x46;
-    /**
-     * Indicates a message that contains something else.
-     */
-    public static final byte MSG_TYPE_OTHER = 0x47;
+    public enum SEMessageType {
+        /**
+         * Indicates a debug message.
+         */
+        MSG_TYPE_DEBUG,
+        /**
+         * Indicates an informatic message.
+         */
+        MSG_TYPE_INFO,
+        /**
+         * Indicates a process requiring optimization.
+         */
+        MSG_TYPE_OPT,
+        /**
+         * Indicates a process requiring optimization that may screw with the functionality of your program.
+         */
+        MSG_TYPE_OPT_FUNC,
+        /**
+         * Indicates a failure in either the engine or the program.
+         */
+        MSG_TYPE_FAIL,
+        /**
+         * Indicates an incompatibility or complete failure in the engine that requires the engine to abort.
+         */
+        MSG_TYPE_FAIL_FATAL,
+        /**
+         * Indicates an error in OpenGL.
+         */
+        MSG_TYPE_OPENGL,
+        /**
+         * Indicates a message that contains something else.
+         */
+        MSG_TYPE_OTHER,
         /**
          * Indicates a message delivered to the current program by an external interface.
          */
-    public static final byte MSG_TYPE_EXTERNAL = 0x48;
-    
+        MSG_TYPE_EXTERNAL
+    }
+
     /**
-     * Inherits nothing from the previous program.
+     * Different inherit modes for {@link engine.SEProgramData#inheritData}.
      */
-    public static final byte INHERIT_NONE = 0x50;
+    public enum SEInheritMode {
+        /**
+         * Inherits nothing from the previous program.
+         */
+        INHERIT_NONE,
+        /**
+         * Inherits values that are higher or equal to the current program data.
+         */
+        INHERIT_MINIMUM,
+        /**
+         * Inherits everything possible.
+         */
+        INHERIT_MOST
+    }
+
     /**
-     * Inherits values that are higher or equal to the current program data.
+     * Different mouse actions for the mouse callback.
      */
-    public static final byte INHERIT_MINIMUM = 0x51;
+    public enum SEMouseAction {
+        /**
+         * A Mouse Action where a mouse have moved within the specified area.
+         */
+        MOUSE_MOVE,
+        /**
+         * Mouse Action: A mouse button has been pressed down within the specified area.
+         */
+        MOUSE_PRESS,
+        /**
+         * Mouse Action: A mouse button has been let go the specified area.
+         */
+        MOUSE_RELEASE,
+        /**
+         * Mouse Action: A mouse has entered the specified area.
+         */
+        MOUSE_ENTER,
+        /**
+         * Mouse Action: A mouse has exited the specified area.
+         */
+        MOUSE_EXIT
+    }
+
     /**
-     * Inherits everything possible.
+     * List of messages for message callbacks.
      */
-    public static final byte INHERIT_MOST = 0x52;
-    
-    /**
-     * A Mouse Action where a mouse have moved within the specified area.
-     */
-    public static final byte MOUSE_MOVE = 0x60;
-    /**
-     * Mouse Action: A mouse button has been pressed down within the specified area.
-     */
-    public static final byte MOUSE_PRESS = 0x61;
-    /**
-     * Mouse Action: A mouse button has been let go the specified area.
-     */
-    public static final byte MOUSE_RELEASE = 0x62;
-    /**
-     * Mouse Action: A mouse has entered the specified area.
-     */
-    public static final byte MOUSE_ENTER = 0x63;
-    /**
-     * Mouse Action: A mouse has exited the specified area.
-     */
-    public static final byte MOUSE_EXIT = 0x64;
-    
-    /**
-     * There was a generic, unspecific and broad event.
-     */
-    public static final int MSG_GENERIC = 0x00;
-    /**
-     * The engine is initializing.
-     * Brace for fatal errors!
-     */
-    public static final int MSG_INIT = 0x01;
-    /**
-     * The engine has entered the main program loop.
-     * You can now be assured surprising incompatibility errors are behind you.
-     */
-    public static final int MSG_LOOP = 0x02;
-    /**
-     * The engine is exiting.
-     * It's just cleaning up some things, then it'll get right back to you.
-     */
-    public static final int MSG_EXIT = 0x03;
-    /**
-     * GLFW failed to start.
-     * We're not completely sure what went wrong, but it could be the machine the engine is running on.
-     */
-    public static final int MSG_GLFW_ERROR = 0x04;
-    /**
-     * GLFW could not create a window.
-     * We're not completely sure what went wrong, but it could be the environment of the application.
-     */
-    public static final int MSG_WINDOW_ERROR = 0x05;
-    /**
-     * Something went wrong while loading the shaders.
-     * Usually preceded by a {@link engine.SEConstants#MSG_SHADERS_VERTEX_COMPILE_ERROR}, {@link engine.SEConstants#MSG_SHADERS_FRAGMENT_COMPILE_ERROR}, {@link engine.SEConstants#MSG_SHADERS_LINK_ERROR}.
-     */
-    public static final int MSG_SHADERS_ERROR = 0x06;
-    /**
-     * The program has claimed to be incompatible with the current version of SEEngine.
-     * This is treated as fatal... usually.
-     */
-    public static final int MSG_INCOMPATIBLE_PROGRAM = 0x07;
-    /**
-     * {@link engine.SEEngine#SEcatchOpenGLErrors} is enabled and OpenGL has reported back with an error.
-     * Check the description for more information.
-     */
-    public static final int MSG_OPENGL_FEEDBACK_ERROR = 0x08;
-    /**
-     * A message was sent to your application that uses a variable descriptions, but was possibly blocked.
-     * {@link engine.SEEngine#SEpreventDoubleDescriptions} may be enabled which makes it impossible for descriptions to change.
-     */
-    public static final int MSG_LOG_WITH_DESCRIPTION_WARNING = 0x09;
-    /**
-     * A call to {@link engine.SEEngine#SEgetFPS()} was made, but {@link engine.SEEngine#SEcalcFPS} was disabled so the returned value may not be accurate.
-     */
-    public static final int MSG_GET_FPS_WARNING = 0x0a;
-    /**
-     * A call to {@link engine.SEEngine#SEdraw()} was made, but the screen was going to be drawn anyways.
-     */
-    public static final int MSG_DRAW_WARNING = 0x0b;
-    /**
-     * A binding point for {@link engine.SEConstants#MSG_TYPE_DEBUG} messages.
-     * If you receive a {@link engine.SEConstants#MSG_TYPE_DEBUG}, the description of it is probably here.
-     */
-    public static final int MSG_DEBUG_BINDING_POINT = 0x0c;
-    /**
-     * The vertex shader failed to compile.
-     */
-    public static final int MSG_SHADERS_VERTEX_COMPILE_ERROR = 0x0d;
-    /**
-     * The fragment shader failed to compile.
-     */
-    public static final int MSG_SHADERS_FRAGMENT_COMPILE_ERROR = 0x0e;
-    /**
-     * The shaders failed to link into a program.
-     */
-    public static final int MSG_SHADERS_LINK_ERROR = 0x0f;
-    /**
-     * An attempt was made to unbind an offset from an object that does not have that particular offset bound.
-     */
-    public static final int MSG_UNBIND_OFFSET_WARNING = 0x10;
-    /**
-     * The object memory has been exhausted and the newest object cannot be created.
-     */
-    public static final int MSG_OUT_OF_OBJECT_MEMORY = 0x11;
-    /**
-     * A wrapper was created with no objects inside it.
-     */
-    public static final int MSG_EMPTY_WRAPPER_CREATED = 0x12;
-    /**
-     * There was a request to find a wrapped object that doesn't exist.
-     * If you get this error, it's probably an internal bug.
-     */
-    public static final int MSG_UNKNOWN_WRAPPED_OBJECT = 0x13;
-    /**
-     * {@link engine.SEEngine#SEdoubleWrappedObjects} was enabled, but an object was asked to be wrapped again after already being wrapped.
-     */
-    public static final int MSG_ALREADY_WRAPPED = 0x14;
-    /**
-     * Some information was missing when checking the depth buffer.
-     * This can happen when flickering {@link engine.SEEngine#SEwrappedObjectDepth} on and off.
-     */
-    public static final int MSG_MISSING_DEPTH_INFO = 0x15;
-    /**
-     * We couldn't find the texture data when loading a texture.
-     */
-    public static final int MSG_MISSING_TEXTURE = 0x16;
-    /**
-     * There was an issue when loading a texture into a Data object.
-     */
-    public static final int MSG_TEXTURE_LOAD_ERROR = 0x17;
-    /**
-     * The two matrices attempted to be multiplied are incompatible.
-     */
-    public static final int MSG_INCOMPATIBLE_MATRICES = 0x18;
-    /**
-     * The texture passed was null.
-     */
-    public static final int MSG_NULL_TEXTURE = 0x19;
-    /**
-     * There isn't enough memory to load the new texture.
-     */
-    public static final int MSG_OUT_OF_TEXTURE_MEMORY = 0x1a;
-    /**
-     * The current computer could not create the appropriate context to create your application.
-     */
-    public static final int MSG_INCOMPATIBLE_CONTEXT = 0x1b;
-    public static final int MSG_OPENAL_FEEDBACK_ERROR = 0x1c;
-    public static final int MSG_EXPERIMENTAL_SOUND_WARNING = 0x1d;
-    public static final int MSG_ADD_LAYER_WARNING = 0x1e;
-    public static final int MSG_UNKNOWN_LAYER = 0x1f;
+    public enum SEMessage {
+        /**
+         * There was a generic, unspecific and broad event.
+         */
+         MSG_GENERIC,
+        /**
+         * The engine is initializing.
+         * Brace for fatal errors!
+         */
+         MSG_INIT,
+        /**
+         * The engine has entered the main program loop.
+         * You can now be assured surprising incompatibility errors are behind you.
+         */
+         MSG_LOOP,
+        /**
+         * The engine is exiting.
+         * It's just cleaning up some things, then it'll get right back to you.
+         */
+         MSG_EXIT,
+        /**
+         * GLFW failed to start.
+         * We're not completely sure what went wrong, but it could be the machine the engine is running on.
+         */
+         MSG_GLFW_ERROR,
+        /**
+         * GLFW could not create a window.
+         * We're not completely sure what went wrong, but it could be the environment of the application.
+         */
+         MSG_WINDOW_ERROR,
+        /**
+         * Something went wrong while loading the shaders.
+         * Usually preceded by a {@link engine.SEConstants.SEMessage#MSG_SHADERS_VERTEX_COMPILE_ERROR}, {@link engine.SEConstants.SEMessage#MSG_SHADERS_FRAGMENT_COMPILE_ERROR}, {@link engine.SEConstants.SEMessage#MSG_SHADERS_LINK_ERROR}.
+         */
+         MSG_SHADERS_ERROR,
+        /**
+         * The program has claimed to be incompatible with the current version of SEEngine.
+         * This is treated as fatal... usually.
+         */
+         MSG_INCOMPATIBLE_PROGRAM,
+        /**
+         * {@link engine.SEEngine#SEcatchOpenGLErrors} is enabled and OpenGL has reported back with an error.
+         * Check the description for more information.
+         */
+         MSG_OPENGL_FEEDBACK_ERROR,
+        /**
+         * A message was sent to your application that uses a variable descriptions, but was possibly blocked.
+         * {@link engine.SEEngine#SEpreventDoubleDescriptions} may be enabled which makes it impossible for descriptions to change.
+         */
+         MSG_LOG_WITH_DESCRIPTION_WARNING,
+        /**
+         * A call to {@link engine.SEEngine#SEgetFPS()} was made, but {@link engine.SEEngine#SEcalcFPS} was disabled so the returned value may not be accurate.
+         */
+         MSG_GET_FPS_WARNING,
+        /**
+         * A call to {@link engine.SEEngine#SEdraw()} was made, but the screen was going to be drawn anyways.
+         */
+         MSG_DRAW_WARNING,
+        /**
+         * A binding point for {@link engine.SEConstants.SEMessageType#MSG_TYPE_DEBUG} messages.
+         * If you receive a {@link engine.SEConstants.SEMessageType#MSG_TYPE_DEBUG}, the description of it is probably here.
+         */
+         MSG_DEBUG_BINDING_POINT,
+        /**
+         * The vertex shader failed to compile.
+         */
+         MSG_SHADERS_VERTEX_COMPILE_ERROR,
+        /**
+         * The fragment shader failed to compile.
+         */
+         MSG_SHADERS_FRAGMENT_COMPILE_ERROR,
+        /**
+         * The shaders failed to link into a program.
+         */
+         MSG_SHADERS_LINK_ERROR,
+        /**
+         * An attempt was made to unbind an offset from an object that does not have that particular offset bound.
+         */
+         MSG_UNBIND_OFFSET_WARNING,
+        /**
+         * The object memory has been exhausted and the newest object cannot be created.
+         */
+         MSG_OUT_OF_OBJECT_MEMORY,
+        /**
+         * A wrapper was created with no objects inside it.
+         */
+         MSG_EMPTY_WRAPPER_CREATED,
+        /**
+         * There was a request to find a wrapped object that doesn't exist.
+         * If you get this error, it's probably an internal bug.
+         */
+         MSG_UNKNOWN_WRAPPED_OBJECT,
+        /**
+         * {@link engine.SEEngine#SEdoubleWrappedObjects} was enabled, but an object was asked to be wrapped again after already being wrapped.
+         */
+         MSG_ALREADY_WRAPPED,
+        /**
+         * Some information was missing when checking the depth buffer.
+         * This can happen when flickering {@link engine.SEEngine#SEuseWrappedObjectDepth} on and off.
+         */
+         MSG_MISSING_DEPTH_INFO,
+        /**
+         * We couldn't find the texture data when loading a texture.
+         */
+         MSG_MISSING_TEXTURE,
+        /**
+         * There was an issue when loading a texture into a Data object.
+         */
+         MSG_TEXTURE_LOAD_ERROR,
+        /**
+         * The two matrices attempted to be multiplied are incompatible.
+         */
+         MSG_INCOMPATIBLE_MATRICES,
+        /**
+         * The texture passed was null.
+         */
+         MSG_NULL_TEXTURE,
+        /**
+         * There isn't enough memory to load the new texture.
+         */
+         MSG_OUT_OF_TEXTURE_MEMORY,
+        /**
+         * The current computer could not create the appropriate context to create your application.
+         */
+         MSG_INCOMPATIBLE_CONTEXT,
+        /**
+         * Turns out OpenAL has reported back with an error.
+         * Check the description for more information.
+         */
+         MSG_OPENAL_FEEDBACK_ERROR,
+        /**
+         * SESound is still experimental, don't play with it too much.
+         * To initlize SESounds completely, call loadSounds trice.
+         */
+         MSG_EXPERIMENTAL_SOUND_WARNING,
+        /**
+         * A layer is being added, but layers themselves are disabled.
+         * To enable layers, enable {@link engine.SEEngine#SEuseLayers}.
+         */
+         MSG_ADD_LAYER_WARNING,
+        /**
+         * The layer you're requesting for doesn't exist.
+         * Or at least, we think it doesn't.
+         */
+         MSG_UNKNOWN_LAYER,
+        /**
+         * You passed an array to an offset that is not 2 in size.
+         */
+         MSG_OFFSET_TOO_LARGE,
+        /**
+         * Fake keys are disabled, yet you're submitting anyway.
+         */
+         MSG_FAKE_KEYS_DISABLED_WARNING
+    }
 }

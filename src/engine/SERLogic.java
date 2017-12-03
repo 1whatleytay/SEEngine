@@ -24,7 +24,7 @@ import static engine.SEConstants.*;
 /**
  * Contains basic structures and some basic logic processing functions.
  * @author desgroup
- * @version SEAlpha3a
+ * @version SEAlpha4a
  */
 public class SERLogic {
     private SERLogic() {}
@@ -45,16 +45,16 @@ public class SERLogic {
          * The core data of the object.
          */
         public float[] data;
-        
-        public int
-                /**
-                 * The width of the data object.
-                 */
-                width,
-                /**
-                 * The height of the data object.
-                 */
-                height;
+
+        /**
+         * The width of the data object.
+         */
+        public int width;
+
+        /**
+         * The height of the data object.
+         */
+        public int height;
 
         /**
          * Creates a new Data object with a specified data array, width and height.
@@ -143,7 +143,7 @@ public class SERLogic {
      */
     public static Data multiplyMatrices(Data mata, Data matb) {
         Data mat = new Data();
-        if (mata.width != matb.height) { SEEngine.log(MSG_TYPE_FAIL, MSG_INCOMPATIBLE_MATRICES); return null; }
+        if (mata.width != matb.height) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_INCOMPATIBLE_MATRICES); return null; }
         mat.width = matb.width; mat.height = mata.height;
         mat.data = new float[mat.width * mat.height];
         for (int x = 0; x < mat.width; x++) {
