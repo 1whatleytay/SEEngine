@@ -57,6 +57,18 @@ public class SEOffset {
     public int[] getOffset() { return offset; }
 
     /**
+     * Returns the X component of this offset.
+     * @return The X component of this offset.
+     */
+    public int getX() { return offset[0]; }
+
+    /**
+     * Returns the Y component of this offset.
+     * @return The Y component of this offset.
+     */
+    public int getY() { return offset[1]; }
+
+    /**
      * Establishes the offset offset into the shader.
      */
     protected void fix() { SEIShaders.offset(offset[0], offset[1]); }

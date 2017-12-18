@@ -113,6 +113,8 @@ public class SEWrappedObj {
      */
     protected int pointer = -1;
 
+    private boolean hasBeenDeleted = false;
+
     /**
      * Gets a particular wrapped object.
      * Modifications may be made.
@@ -120,6 +122,8 @@ public class SEWrappedObj {
      * @return The object at index obj.
      */
     public SEObj getObject(int obj) { return objs[obj]; }
+
+    public SEObj object() { return objs[0]; }
 
     /**
      * Gets a copy of all the objects in this wrapped object.
@@ -309,6 +313,12 @@ public class SEWrappedObj {
      * Repeatedly deleting wrapped objects can cause slowdown.
      */
     public void delete() { knownObjects.set(pointer, null); }
+
+    /**
+     * Returns true if this wrapped object has been deleted.
+     * @return True if this wrapped object has been deleted.
+     */
+    public boolean hasBeenDeleted() { return hasBeenDeleted; }
 
     /**
      * Content version of {@link engine.SEWrappedObj#delete()}.

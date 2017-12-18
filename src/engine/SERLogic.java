@@ -113,7 +113,11 @@ public class SERLogic {
     public static boolean isPointColliding(int x, int y, int mx, int my, int mw, int mh) {
         return x > mx && x < mx + mw && y > my && y < my + mh;
     }
-    
+
+    private static boolean isSBoxColliding(float x, float y, float w, float h, float mx, float my, float mw, float mh) {
+        return ((x > mx && x < mx + mw) || (x + w > mx && x + w < mx + mw)) && ((y > my && y < my + mh) || (y + h > my && y + h < my + mh));
+    }
+
     /**
      * Returns true if the box x, y, w, h is colliding with the box mx, my, mw, mh.
      * @param x The x coordinate of the first box.
@@ -127,11 +131,7 @@ public class SERLogic {
      * @return True if the box is colliding with the test region.
      */
     public static boolean isBoxColliding(float x, float y, float w, float h, float mx, float my, float mw, float mh) {
-        return ((x >= mx && x <= mx + mw) || (x + w >= mx && x + w <= mx + mw)) && ((y >= my && y <= my + mh) || (y + h >= my && y + h <= my + mh));
-    }
-    
-    public static boolean isABoxColliding(float x, float y, float w, float h, float mx, float my, float mw, float mh) {
-        return isBoxColliding(x, y, w, h, mx, my, mw, mh) || isBoxColliding(mx, my, mw, mh, x, y, w, h);
+        return isSBoxColliding(x, y, w, h, mx, my, mw, mh) || isSBoxColliding(mx, my, mw, mh, x, y, w, h);
     }
 
     /**

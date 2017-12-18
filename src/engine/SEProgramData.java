@@ -36,6 +36,7 @@ public class SEProgramData {
         compatibleVersions = copy.compatibleVersions; textureComponents = copy.textureComponents;
         isFullScreen = copy.isFullScreen;
         inheritData = copy.inheritData; useQuickClear = copy.useQuickClear;
+        useVsync = copy.useVsync;
         bkgColor = Arrays.copyOf(copy.bkgColor, 4);
         functions = new SEFunctionBundle(copy.functions);
     }
@@ -109,10 +110,16 @@ public class SEProgramData {
     public boolean useQuickClear = false;
 
     /**
+     * If this value is true, vsync will be enabled and so the program's {@link SEControlledProgram#update()} function will be called at the monitors refresh rate.
+     * If this value is false, the program's {@link SEControlledProgram#update()} will be called as soon as possible for each frame.
+     */
+    public boolean useVsync = true;
+
+    /**
      * Controls the background color of the program.
      * The first component is red, follow by green, blue and alpha.
      */
-    public float[] bkgColor = {0, 0, 0, 1};
+    public float[] bkgColor = {0, 0, 0};
 
     /**
      * Your program's supplied response functions.

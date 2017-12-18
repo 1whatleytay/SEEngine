@@ -26,13 +26,6 @@ import static engine.SEConstants.*;
  */
 public class SELayerData {
     /**
-     * A unique layer name.
-     * Used for editing and accessing layers by the program.
-     * It should be availible to the program.
-     */
-    public String layerName = "layer";
-
-    /**
      * An {@link engine.SEConstants.SEFunctionBundle} object to have it's functions called right before the program's own {@link engine.SEConstants.SEFunctionBundle}.
      */
     public SEFunctionBundle preFuncs = new SEFunctionBundle();
@@ -43,7 +36,7 @@ public class SELayerData {
     public SEFunctionBundle postFuncs = new SEFunctionBundle();
 
     /**
-     * A function called once the layer has been added.
+     * A function called once the layer has been added and the engine has been initialized.
      */
     public SEInfoFunc setupFunc = () -> {};
 }

@@ -114,13 +114,17 @@ class SEIShaders {
         glShaderSource(fShader, SHADER_SOURCES[fragComponentMode.ordinal() + 1]);
         glCompileShader(vShader);
         if (glGetShaderi(vShader, GL_COMPILE_STATUS) != GL_TRUE) {
-            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR, "Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
+            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL,
+                    SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR,
+                    "Failed to compile vertex shader:\n" + glGetShaderInfoLog(vShader));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
         glCompileShader(fShader);
         if (glGetShaderi(fShader, GL_COMPILE_STATUS) != GL_TRUE) {
-            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR, "Failed to compile fragment shader:\n" + glGetShaderInfoLog(fShader));
+            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL,
+                    SEMessage.MSG_SHADERS_VERTEX_COMPILE_ERROR,
+                    "Failed to compile fragment shader:\n" + glGetShaderInfoLog(fShader));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
@@ -128,7 +132,9 @@ class SEIShaders {
         glAttachShader(shaderProgram, fShader);
         glLinkProgram(shaderProgram);
         if (glGetProgrami(shaderProgram, GL_LINK_STATUS) != GL_TRUE) {
-            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_LINK_ERROR, "Failed to link shader program:\n" + glGetProgramInfoLog(shaderProgram));
+            SEEngine.logWithDescription(SEMessageType.MSG_TYPE_FAIL_FATAL,
+                    SEMessage.MSG_SHADERS_LINK_ERROR,
+                    "Failed to link shader program:\n" + glGetProgramInfoLog(shaderProgram));
             glDeleteProgram(shaderProgram); glDeleteShader(vShader); glDeleteShader(fShader);
             return false;
         }
@@ -159,14 +165,22 @@ class SEIShaders {
      * @param xMat The x position of the new matrix center (in pixels).
      * @param yMat The y position of the new matrix center (in pixels).
      */
-    protected static void matrix_center(int xMat, int yMat) { glUniform2f(uni_matrix_center, (xMat / SEEngine.scWidth - 0.5f) * 2 * SEObj.ampX, (yMat / SEEngine.scHeight - 0.5f) * 2 * SEObj.ampY); }
+    protected static void matrix_center(int xMat, int yMat) {
+        glUniform2f(uni_matrix_center,
+                (xMat / SEEngine.scWidth - 0.5f) * 2 * SEObj.ampX,
+                (yMat / SEEngine.scHeight - 0.5f) * 2 * SEObj.ampY);
+    }
 
     /**
      * Changes the current offset (for the shader) to xOffset, yOffset.
      * @param xOffset The x offset to be used.
      * @param yOffset The y offset to be used.
      */
-    protected static void offset(int xOffset, int yOffset) { glUniform2f(uni_offset, (float)xOffset / (float)SEEngine.scWidth * SEObj.ampX * 2, (float)yOffset / (float)SEEngine.scHeight * SEObj.ampY * 2); }
+    protected static void offset(int xOffset, int yOffset) {
+        glUniform2f(uni_offset,
+                (float)xOffset / (float)SEEngine.scWidth * SEObj.ampX * 2,
+                (float)yOffset / (float)SEEngine.scHeight * SEObj.ampY * 2);
+    }
     
     /**
      * Adds Vertex Attribute Pointers to the currently bound buffer.

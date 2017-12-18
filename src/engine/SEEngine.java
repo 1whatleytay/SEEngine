@@ -147,7 +147,7 @@ public class SEEngine {
      * @param message A indicator of the specific message.
      */
     public static void log(SEMessageType type, SEMessage message) {
-        if (msgFuncExists) programData.functions.messageFunc.msg(type, message);
+        if (msgFuncExists) programBundle.programData.functions.messageFunc.msg(type, message);
         engineLog += SEgetMessageDescription(message) + "\n"; 
     }
     
@@ -238,8 +238,7 @@ public class SEEngine {
     
     private static long window = NULL;
     
-    private static SEControlledProgram program;
-    private static SEProgramData programData;
+    private static SEProgramBundle programBundle;
     
     /**
     * Width of the current window.
@@ -349,7 +348,7 @@ public class SEEngine {
                 }
             }
             if (SEuseLayers) { for (SELayerBundle bundle : knownLayers) bundle.layer.pre(); }
-            program.update();
+            programBundle.program.update();
             if (SEuseLayers) { for (SELayerBundle bundle : knownLayers) bundle.layer.post(); }
             if (!SEdrawOnCommand) {
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -368,50 +367,63 @@ public class SEEngine {
         return (inh.ordinal() >= SEInheritMode.INHERIT_MOST.ordinal() || (inh.ordinal() == SEInheritMode.INHERIT_MINIMUM.ordinal() && oldVal >= newVal));
     }
     
-    private static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
-        SEControlledProgram oldProgram = program;
-        SEProgramData oldProgramData = programData;
+    private static SEProgramBundle SEswapPrograms(SEControlledProgram newProgram, boolean doSetup, boolean doChanges) {
+        SEProgramBundle oldProgramBundle = new SEProgramBundle(programBundle);
         SEProgramData newProgramData = newProgram.program();
         if (doChanges) {
             glfwSetWindowTitle(window, newProgramData.programName);
-            if (oldProgramData.isFullScreen != newProgramData.isFullScreen && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal());
-            if ((oldProgramData.windowWidth != newProgramData.windowWidth || oldProgramData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal()) {
+            glfwSwapInterval(programBundle.programData.useVsync ? 1 : 0);
+            if (oldProgramBundle.programData.isFullScreen != newProgramData.isFullScreen && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal());
+            if ((oldProgramBundle.programData.windowWidth != newProgramData.windowWidth || oldProgramBundle.programData.windowHeight != newProgramData.windowHeight) && newProgramData.inheritData.ordinal() <= SEInheritMode.INHERIT_NONE.ordinal()) {
                 glfwSetWindowSize(window, newProgramData.windowWidth, newProgramData.windowHeight);
                 scWidth = newProgramData.windowWidth; scHeight = newProgramData.windowHeight;
             }
             SERImages.components = newProgramData.textureComponents;
-            if (oldProgramData.textureComponents != newProgramData.textureComponents) {
-                if (SERImages.components == 1) SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
-                else if (SERImages.components == 4) {
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            if (oldProgramBundle.programData.textureComponents != newProgramData.textureComponents) {
+                switch (SERImages.components) {
+                    case 1:
+                        SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
+                        break;
+                    case 4:
+                        glEnable(GL_BLEND);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                        break;
+                    case FOURTH_COMPONENT_AS_DISCARD:
+                        SERImages.components = 4;
+                        SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA;
+                        break;
+                    default:
+                        log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_UNKNOWN_COMPONENT_VALUE);
+                        return null;
                 }
-                else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
-                    SERImages.components = 4; SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA; }
                 if (!SEIShaders.loadProgram()) { log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_SHADERS_ERROR); return null; }
             }
             SERImages.components = (byte)Math.min(newProgramData.textureComponents, 4);
             if (
                     newProgramData.useQuickClear &&
-                    (oldProgramData.maxObjects == newProgramData.maxObjects ||
+                    (oldProgramBundle.programData.maxObjects == newProgramData.maxObjects ||
                     shouldInherit(
                             newProgramData.inheritData,
-                            oldProgramData.maxObjects,
+                            oldProgramBundle.programData.maxObjects,
                             newProgramData.maxObjects))) {
                 SEObj.quickClearObjects();
                 SEWrappedObj.SEclearWrappedObjects();
             }
             else {
-                SEObj.clearObjects(shouldInherit(newProgramData.inheritData, oldProgramData.maxObjects, newProgramData.maxObjects) ? oldProgramData.maxObjects : newProgramData.maxObjects);
+                SEObj.clearObjects(
+                        shouldInherit(newProgramData.inheritData,
+                                oldProgramBundle.programData.maxObjects,
+                                newProgramData.maxObjects) ?
+                                oldProgramBundle.programData.maxObjects : newProgramData.maxObjects);
                 SEWrappedObj.SEclearWrappedObjects();
             }
             if (newProgramData.useQuickClear && ((
-                    oldProgramData.texMemoryWidth == newProgramData.texMemoryWidth &&
-                    oldProgramData.texMemoryHeight == newProgramData.texMemoryHeight &&
-                    oldProgramData.textureComponents == newProgramData.textureComponents ) ||
-                    shouldInherit(newProgramData.inheritData, oldProgramData.texMemoryWidth, newProgramData.texMemoryWidth) &&
-                    shouldInherit(newProgramData.inheritData, oldProgramData.texMemoryHeight, newProgramData.texMemoryHeight) &&
-                    shouldInherit(newProgramData.inheritData, oldProgramData.textureComponents, newProgramData.textureComponents)))
+                    oldProgramBundle.programData.texMemoryWidth == newProgramData.texMemoryWidth &&
+                    oldProgramBundle.programData.texMemoryHeight == newProgramData.texMemoryHeight &&
+                    oldProgramBundle.programData.textureComponents == newProgramData.textureComponents ) ||
+                    shouldInherit(newProgramData.inheritData, oldProgramBundle.programData.texMemoryWidth, newProgramData.texMemoryWidth) &&
+                    shouldInherit(newProgramData.inheritData, oldProgramBundle.programData.texMemoryHeight, newProgramData.texMemoryHeight) &&
+                    shouldInherit(newProgramData.inheritData, oldProgramBundle.programData.textureComponents, newProgramData.textureComponents)))
                 SETex.quickClearTextures();
             else {
                 SETex.clearTextures(newProgramData.texMemoryWidth, newProgramData.texMemoryHeight);
@@ -419,11 +431,13 @@ public class SEEngine {
             glClearColor(newProgramData.bkgColor[0], newProgramData.bkgColor[1], newProgramData.bkgColor[2], newProgramData.bkgColor[3]);
             msgFuncExists = newProgramData.functions.messageFunc != null;
         }
-        if (!isCompatible(newProgramData.compatibleVersions)) { log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_INCOMPATIBLE_PROGRAM); return oldProgram; }
-        program = newProgram;
-        programData = new SEProgramData(newProgramData);
+        if (!isCompatible(newProgramData.compatibleVersions)) {
+            log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_INCOMPATIBLE_PROGRAM);
+            return oldProgramBundle;
+        }
+        programBundle = new SEProgramBundle(newProgram, newProgramData);
         if (doSetup) newProgram.setup();
-        return oldProgram;
+        return oldProgramBundle;
     }
     
     /**
@@ -433,7 +447,7 @@ public class SEEngine {
      * @param doSetup If true, newProgram will have it's {@link engine.SEControlledProgram#setup()} method called.
      * @return The last program that was running.
      */
-    public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram, boolean doSetup) {
+    public static SEProgramBundle SEswapPrograms(SEControlledProgram newProgram, boolean doSetup) {
         return SEswapPrograms(newProgram, doSetup, true);
     }
 
@@ -443,7 +457,7 @@ public class SEEngine {
      * @param newProgram The program to replace the old one.
      * @return The last program that was running.
      */
-    public static SEControlledProgram SEswapPrograms(SEControlledProgram newProgram) {
+    public static SEProgramBundle SEswapPrograms(SEControlledProgram newProgram) {
         return SEswapPrograms(newProgram, true);
     }
     
@@ -452,7 +466,7 @@ public class SEEngine {
      * @param newColor The new background color. Should be an array with 4 elements.
      */
     public static void SEchangeBackgroundColor(float[] newColor) {
-        glClearColor(newColor[0], newColor[1], newColor[2], newColor[3]);
+        glClearColor(newColor[0], newColor[1], newColor[2], 1);
     }
     
     private static ArrayList<SEInfoFunc> quedFuncs = new ArrayList<>();
@@ -476,29 +490,20 @@ public class SEEngine {
      */
     public static void SEaddLayer(SEControlledLayer layer) {
         SELayerData layerData = layer.layer();
-        if (!SEuseLayers && !hasWarnedDisabledLayers) { log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_ADD_LAYER_WARNING); hasWarnedDisabledLayers = true; }
+        if (!SEuseLayers && !hasWarnedDisabledLayers) {
+            log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_ADD_LAYER_WARNING);
+            hasWarnedDisabledLayers = true;
+        }
         SEaddQue(layerData.setupFunc);
-        SELayerBundle bundle = new SELayerBundle();
-        bundle.layer = layer;
-        bundle.layerData = layerData;
+        SELayerBundle bundle = new SELayerBundle(layer, layerData);
         knownLayers.add(bundle);
     }
 
     /**
-     * Removes a layer (by layer name) from the application.
-     * @param layerName The layer to remove.
+     * Removes a layer from the application.
+     * @param layer The layer to remove.
      */
-    public static void SEremoveLayer(String layerName) {
-        int find = -1;
-        for (int a = 0; a < knownLayers.size(); a++) {
-            if (knownLayers.get(a).layerData.layerName.equals(layerName)) {
-                find = a;
-                break;
-            }
-        }
-        if (find == -1) { log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_UNKNOWN_LAYER); return; }
-        knownLayers.remove(find);
-    }
+    public static void SEremoveLayer(SEControlledLayer layer) { knownLayers.remove(layer); }
 
     private static HashMap<Integer, Boolean> fakeKeyPresses = new HashMap<>();
 
@@ -527,43 +532,67 @@ public class SEEngine {
      * @param action The action to perform the the key.
      */
     public static void SEsubmitFakePress(int key, int action) {
-        if (!SEuseFakeKeyPresses && !hasWarnedFakePress) { log(SEMessageType.MSG_TYPE_OPT_FUNC, SEMessage.MSG_FAKE_KEYS_DISABLED_WARNING); hasWarnedFakePress = true; }
+        if (!SEuseFakeKeyPresses && !hasWarnedFakePress) {
+            log(SEMessageType.MSG_TYPE_OPT_FUNC, SEMessage.MSG_FAKE_KEYS_DISABLED_WARNING);
+            hasWarnedFakePress = true;
+        }
+
         if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.keyFunc.key(key, action);
-        programData.functions.keyFunc.key(key, action);
+        programBundle.programData.functions.keyFunc.key(key, action);
         if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.keyFunc.key(key, action);
         if (action == GLFW_PRESS) fakeKeyPresses.put(key, true);
         else fakeKeyPresses.put(key, false);
     }
     
     private static boolean init(SEControlledProgram prog) {
-        program = prog;
-        programData = new SEProgramData(prog.program());
-        if (programData.functions.messageFunc != null) msgFuncExists = true;
+
+        programBundle = new SEProgramBundle(prog, new SEProgramData(prog.program()));
+
+        if (programBundle.programData.functions.messageFunc != null) msgFuncExists = true;
+
         log(SEMessageType.MSG_TYPE_INFO, SEMessage.MSG_INIT);
+
         if (!glfwInit()) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_GLFW_ERROR); return false; }
+
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 1);
-        window = glfwCreateWindow(programData.windowWidth, programData.windowHeight, programData.programName, programData.isFullScreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+
+        window = glfwCreateWindow(programBundle.programData.windowWidth, programBundle.programData.windowHeight,
+                programBundle.programData.programName,
+                programBundle.programData.isFullScreen ? glfwGetPrimaryMonitor() : NULL, NULL);
         if (window == NULL) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_WINDOW_ERROR); return false; }
+
         glfwMakeContextCurrent(window);
+
+        glfwSwapInterval(programBundle.programData.useVsync ? 1 : 0);
+
         glfwSetKeyCallback(window, (long windowM, int key, int scancode, int action, int mods)->{
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.keyFunc.key(key, action);
-            programData.functions.keyFunc.key(key, action);
+            programBundle.programData.functions.keyFunc.key(key, action);
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.keyFunc.key(key, action);
         });
+
         glfwSetCursorPosCallback(window, (long windowM, double x, double y) -> {
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
-            programData.functions.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
-            if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers)
+                bundle.layerData.preFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            programBundle.programData.functions.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
+            if (SEuseLayers) for (SELayerBundle bundle : knownLayers)
+                bundle.layerData.postFuncs.mouseFunc.mouse((int)x, (int)y, 0, SEMouseAction.MOUSE_MOVE);
             for (SEButton bundle : SEButton.buttons) {
                 if (SERLogic.isPointColliding((int)x, (int)y, bundle.x, bundle.y, bundle.w, bundle.h)) {
                     bundle.func.func(bundle, SEMouseAction.MOUSE_MOVE);
-                    if (!bundle.mouseOver) { bundle.mouseOver = true; bundle.func.func(bundle, SEMouseAction.MOUSE_ENTER);
+                    if (!bundle.mouseOver) {
+                        bundle.mouseOver = true;
+                        bundle.func.func(bundle, SEMouseAction.MOUSE_ENTER);
                     }
-                } else if (bundle.mouseOver) { bundle.mouseOver = false; bundle.func.func(bundle, SEMouseAction.MOUSE_EXIT); }
+                } else if (bundle.mouseOver) {
+                    bundle.mouseOver = false;
+                    bundle.func.func(bundle, SEMouseAction.MOUSE_EXIT);
+                }
             }
         });
+
         glfwSetMouseButtonCallback(window, (long windowM, int button, int action, int mods) -> {
             SEMouseAction ma = SEMouseAction.MOUSE_EXIT;
             switch (action) {
@@ -573,26 +602,41 @@ public class SEEngine {
             double[] x = new double[1], y = new double[1];
             glfwGetCursorPos(window, x, y);
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.preFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
-            programData.functions.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
+            programBundle.programData.functions.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
             if (SEuseLayers) for (SELayerBundle bundle : knownLayers) bundle.layerData.postFuncs.mouseFunc.mouse((int)x[0], (int)y[0], button, ma);
             for (SEButton bundle : SEButton.buttons)
-                if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h)) bundle.func.func(bundle, action == GLFW_PRESS ? SEMouseAction.MOUSE_PRESS : SEMouseAction.MOUSE_RELEASE);
+                if (SERLogic.isPointColliding((int)x[0], (int)y[0], bundle.x, bundle.y, bundle.w, bundle.h))
+                    bundle.func.func(bundle, action == GLFW_PRESS ? SEMouseAction.MOUSE_PRESS : SEMouseAction.MOUSE_RELEASE);
         });
+
         GL.createCapabilities();
-        SERImages.components = programData.textureComponents;
-        if (SERImages.components == 1) SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
-        else if (SERImages.components == 4) {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        SERImages.components = programBundle.programData.textureComponents;
+        switch (SERImages.components) {
+            case 1:
+                SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_GREYSCALE;
+                break;
+            case 4:
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                break;
+            case FOURTH_COMPONENT_AS_DISCARD:
+                SERImages.components = 4;
+                SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA;
+                break;
+            default:
+                log(SEMessageType.MSG_TYPE_FAIL, SEMessage.MSG_UNKNOWN_COMPONENT_VALUE);
+                return false;
         }
-        else if (SERImages.components >= FOURTH_COMPONENT_AS_DISCARD) {
-            SERImages.components = 4; SEIShaders.fragComponentMode = SEFragMode.FRAG_MODE_ROUND_ALPHA; }
+
         if (!SEIShaders.loadProgram()) { log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_SHADERS_ERROR); return false; }
-        if (!isCompatible(programData.compatibleVersions)) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_INCOMPATIBLE_PROGRAM); return false; }
-        SEObj.init(programData.maxObjects);
-        SETex.init(programData.texMemoryWidth, programData.texMemoryHeight);
-        scWidth = programData.windowWidth; scHeight = programData.windowHeight;
-        SEchangeBackgroundColor(programData.bkgColor);
+        if (!isCompatible(programBundle.programData.compatibleVersions)) { SEEngine.log(SEMessageType.MSG_TYPE_FAIL_FATAL, SEMessage.MSG_INCOMPATIBLE_PROGRAM); return false; }
+
+        SEObj.init(programBundle.programData.maxObjects);
+        SETex.init(programBundle.programData.texMemoryWidth, programBundle.programData.texMemoryHeight);
+
+        scWidth = programBundle.programData.windowWidth; scHeight = programBundle.programData.windowHeight;
+        SEchangeBackgroundColor(programBundle.programData.bkgColor);
         for (SEInfoFunc qf : quedFuncs) qf.func();
         isRunning = true;
         prog.setup();

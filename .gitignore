@@ -10,3 +10,6 @@ manifest.mf
 .DS_Store
 .idea
 Spells Engine.iml
+javadoc
+javadoc.jar
+createjavadoc.sh

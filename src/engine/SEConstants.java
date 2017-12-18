@@ -28,16 +28,62 @@ public class SEConstants {
      * A bundle of a program and its data.
      */
     protected static class SEProgramBundle {
+        /**
+         * The program this bundle is about.
+         */
         SEControlledProgram program;
+        /**
+         * The collected info about the program.
+         */
         SEProgramData programData;
+
+        /**
+         * Constructor.
+         * @param program The program to bundle.
+         * @param programData The data about the program.
+         */
+        public SEProgramBundle(SEControlledProgram program, SEProgramData programData) {
+            this.program = program; this.programData = programData;
+        }
+
+        /**
+         * Copy constructor.
+         * @param programBundle The bundle to copy.
+         */
+        public SEProgramBundle(SEProgramBundle programBundle) {
+            program = programBundle.program; programData = programBundle.programData;
+        }
     }
 
     /**
      * A bundle of a layer and its data.
      */
     protected static class SELayerBundle {
+        /**
+         * The layer this bundle is about.
+         */
         SEControlledLayer layer;
+        /**
+         * The collected info about the layer.
+         */
         SELayerData layerData;
+
+        /**
+         * Constructor.
+         * @param layer The layer to bundle.
+         * @param layerData The data about the layer.
+         */
+        public SELayerBundle(SEControlledLayer layer, SELayerData layerData) {
+            this.layer = layer; this.layerData = layerData;
+        }
+
+        /**
+         * Copy constructor.
+         * @param layerBundle The undle to copy.
+         */
+        public SELayerBundle(SELayerBundle layerBundle) {
+            layer = layerBundle.layer; layerData = layerBundle.layerData;
+        }
     }
 
     /**
@@ -302,154 +348,159 @@ public class SEConstants {
         /**
          * There was a generic, unspecific and broad event.
          */
-         MSG_GENERIC,
+        MSG_GENERIC,
         /**
          * The engine is initializing.
          * Brace for fatal errors!
          */
-         MSG_INIT,
+        MSG_INIT,
         /**
          * The engine has entered the main program loop.
          * You can now be assured surprising incompatibility errors are behind you.
          */
-         MSG_LOOP,
+        MSG_LOOP,
         /**
          * The engine is exiting.
          * It's just cleaning up some things, then it'll get right back to you.
          */
-         MSG_EXIT,
+        MSG_EXIT,
         /**
          * GLFW failed to start.
          * We're not completely sure what went wrong, but it could be the machine the engine is running on.
          */
-         MSG_GLFW_ERROR,
+        MSG_GLFW_ERROR,
         /**
          * GLFW could not create a window.
          * We're not completely sure what went wrong, but it could be the environment of the application.
          */
-         MSG_WINDOW_ERROR,
+        MSG_WINDOW_ERROR,
         /**
          * Something went wrong while loading the shaders.
          * Usually preceded by a {@link engine.SEConstants.SEMessage#MSG_SHADERS_VERTEX_COMPILE_ERROR}, {@link engine.SEConstants.SEMessage#MSG_SHADERS_FRAGMENT_COMPILE_ERROR}, {@link engine.SEConstants.SEMessage#MSG_SHADERS_LINK_ERROR}.
          */
-         MSG_SHADERS_ERROR,
+        MSG_SHADERS_ERROR,
         /**
          * The program has claimed to be incompatible with the current version of SEEngine.
          * This is treated as fatal... usually.
          */
-         MSG_INCOMPATIBLE_PROGRAM,
+        MSG_INCOMPATIBLE_PROGRAM,
         /**
          * {@link engine.SEEngine#SEcatchOpenGLErrors} is enabled and OpenGL has reported back with an error.
          * Check the description for more information.
          */
-         MSG_OPENGL_FEEDBACK_ERROR,
+        MSG_OPENGL_FEEDBACK_ERROR,
         /**
          * A message was sent to your application that uses a variable descriptions, but was possibly blocked.
          * {@link engine.SEEngine#SEpreventDoubleDescriptions} may be enabled which makes it impossible for descriptions to change.
          */
-         MSG_LOG_WITH_DESCRIPTION_WARNING,
+        MSG_LOG_WITH_DESCRIPTION_WARNING,
         /**
          * A call to {@link engine.SEEngine#SEgetFPS()} was made, but {@link engine.SEEngine#SEcalcFPS} was disabled so the returned value may not be accurate.
          */
-         MSG_GET_FPS_WARNING,
+        MSG_GET_FPS_WARNING,
         /**
          * A call to {@link engine.SEEngine#SEdraw()} was made, but the screen was going to be drawn anyways.
          */
-         MSG_DRAW_WARNING,
+        MSG_DRAW_WARNING,
         /**
          * A binding point for {@link engine.SEConstants.SEMessageType#MSG_TYPE_DEBUG} messages.
          * If you receive a {@link engine.SEConstants.SEMessageType#MSG_TYPE_DEBUG}, the description of it is probably here.
          */
-         MSG_DEBUG_BINDING_POINT,
+        MSG_DEBUG_BINDING_POINT,
         /**
          * The vertex shader failed to compile.
          */
-         MSG_SHADERS_VERTEX_COMPILE_ERROR,
+        MSG_SHADERS_VERTEX_COMPILE_ERROR,
         /**
          * The fragment shader failed to compile.
          */
-         MSG_SHADERS_FRAGMENT_COMPILE_ERROR,
+        MSG_SHADERS_FRAGMENT_COMPILE_ERROR,
         /**
          * The shaders failed to link into a program.
          */
-         MSG_SHADERS_LINK_ERROR,
+        MSG_SHADERS_LINK_ERROR,
         /**
          * An attempt was made to unbind an offset from an object that does not have that particular offset bound.
          */
-         MSG_UNBIND_OFFSET_WARNING,
+        MSG_UNBIND_OFFSET_WARNING,
         /**
          * The object memory has been exhausted and the newest object cannot be created.
          */
-         MSG_OUT_OF_OBJECT_MEMORY,
+        MSG_OUT_OF_OBJECT_MEMORY,
         /**
          * A wrapper was created with no objects inside it.
          */
-         MSG_EMPTY_WRAPPER_CREATED,
+        MSG_EMPTY_WRAPPER_CREATED,
         /**
          * There was a request to find a wrapped object that doesn't exist.
          * If you get this error, it's probably an internal bug.
          */
-         MSG_UNKNOWN_WRAPPED_OBJECT,
+        MSG_UNKNOWN_WRAPPED_OBJECT,
         /**
          * {@link engine.SEEngine#SEdoubleWrappedObjects} was enabled, but an object was asked to be wrapped again after already being wrapped.
          */
-         MSG_ALREADY_WRAPPED,
+        MSG_ALREADY_WRAPPED,
         /**
          * Some information was missing when checking the depth buffer.
          * This can happen when flickering {@link engine.SEEngine#SEuseWrappedObjectDepth} on and off.
          */
-         MSG_MISSING_DEPTH_INFO,
+        MSG_MISSING_DEPTH_INFO,
         /**
          * We couldn't find the texture data when loading a texture.
          */
-         MSG_MISSING_TEXTURE,
+        MSG_MISSING_TEXTURE,
         /**
          * There was an issue when loading a texture into a Data object.
          */
-         MSG_TEXTURE_LOAD_ERROR,
+        MSG_TEXTURE_LOAD_ERROR,
         /**
          * The two matrices attempted to be multiplied are incompatible.
          */
-         MSG_INCOMPATIBLE_MATRICES,
+        MSG_INCOMPATIBLE_MATRICES,
         /**
          * The texture passed was null.
          */
-         MSG_NULL_TEXTURE,
+        MSG_NULL_TEXTURE,
         /**
          * There isn't enough memory to load the new texture.
          */
-         MSG_OUT_OF_TEXTURE_MEMORY,
+        MSG_OUT_OF_TEXTURE_MEMORY,
         /**
          * The current computer could not create the appropriate context to create your application.
          */
-         MSG_INCOMPATIBLE_CONTEXT,
+        MSG_INCOMPATIBLE_CONTEXT,
         /**
          * Turns out OpenAL has reported back with an error.
          * Check the description for more information.
          */
-         MSG_OPENAL_FEEDBACK_ERROR,
+        MSG_OPENAL_FEEDBACK_ERROR,
         /**
          * SESound is still experimental, don't play with it too much.
          * To initlize SESounds completely, call loadSounds trice.
          */
-         MSG_EXPERIMENTAL_SOUND_WARNING,
+        MSG_EXPERIMENTAL_SOUND_WARNING,
         /**
          * A layer is being added, but layers themselves are disabled.
          * To enable layers, enable {@link engine.SEEngine#SEuseLayers}.
          */
-         MSG_ADD_LAYER_WARNING,
+        MSG_ADD_LAYER_WARNING,
         /**
          * The layer you're requesting for doesn't exist.
          * Or at least, we think it doesn't.
          */
-         MSG_UNKNOWN_LAYER,
+        MSG_UNKNOWN_LAYER,
         /**
          * You passed an array to an offset that is not 2 in size.
          */
-         MSG_OFFSET_TOO_LARGE,
+        MSG_OFFSET_TOO_LARGE,
         /**
          * Fake keys are disabled, yet you're submitting anyway.
          */
-         MSG_FAKE_KEYS_DISABLED_WARNING
+        MSG_FAKE_KEYS_DISABLED_WARNING,
+        /**
+         * A program returned an unknown value for {@link engine.SEProgramData#textureComponents}.
+         */
+        MSG_UNKNOWN_COMPONENT_VALUE,
+
     }
 }
